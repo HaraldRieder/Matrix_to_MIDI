@@ -9,41 +9,65 @@ keyboard scanned by diode matrix
  */
 void handleKeyEvent(int key, boolean on);
 
-const int n_columns = 8; // neighbours belong to different columns
-const int n_rows = 2; // cable supports up to 3, but 2 are sufficient for 15 pedals
+const int n_columns = 8; // neighbour keys belong to different columns
+const int n_rows = 11; // 8 * 11= 88 keys
 
-boolean key_states[n_columns * n_rows] ; // all off, most left pedal = 0
+boolean key_states[n_columns * n_rows] ; // all off, most left key = 0
 
 /* normally closed pins (Ruhekontakte) */
 const int nc_row_pins[n_rows] = {
-  30,  // R12 green-brown
-  34  // R13 green
-//  38  // R14 green-white
+  43, // R1 
+  40, // R2 
+  53, // R3 
+  46, // R4
+  52, // R5 
+  5,  // R6 
+  37, // R7 
+  30, // R8 
+  31, // R9 
+  25, // R10 
+  24  // R11 
 };
 
 /* normally open pins (Arbeitskontakte) */
 const int no_row_pins[n_rows] = {
-  28,  // A12 red-black
-  32  // A13 red
-//  36  // R14 rose
+  47, // A1 
+  36, // A2 
+  49, // A3 
+  42, // A4 
+  48, // A5 
+  4,  // A6 marked
+  41, // A7 
+  34, // A8 
+  35, // A9 
+  29, // A10 
+  28  // A11 
 };
 
 const int row_pins[n_rows] = {
-  40, // 
-  42
-//  44
+  45, // 1 
+  38, // 2 
+  51, // 3 
+  44, // 4 
+  50, // 5 
+  3,  // 6 
+  39, // 7 
+  32, // 8 
+  33, // 9 
+  27, // 10
+  26  // 11
 };
 
 /* These are connected to the anodes of the diodes. */
 const int column_pins[n_columns] = {
-  29,  // G1 black
-  31,  // G2
-  33,  // G3
-  35,  // G4
-  37,  // G5
-  39,  // G6
-  41,  // G7
-  43  // G8 violet
+  6,  // G1
+  7,  // G2
+  8,  // G3
+  9,  // G4
+  10, // G5
+  11, // G6
+  12, // G7
+  13  // G8 marked
 };
 
 /**
