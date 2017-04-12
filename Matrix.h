@@ -4,7 +4,7 @@ keyboard scanned by diode matrix
 
 /**
  * Called if a state change is detected by the matrix scanner.
- * @param key 0 = most left key
+ * @param key 0 = most left key, normally an A (88 keys) 
  * @param on true if the key has been pressed, else it has been released
  */
 void handleKeyEvent(int key, boolean on);
@@ -99,7 +99,7 @@ void scanMatrix() {
     for (int column = 0; column < n_columns; column++) {
       digitalWrite(column_pins[column], HIGH);
       int index = column + row * n_columns;
-      boolean & state = pedal_states[index]; 
+      boolean & state = key_states[index]; 
       int value = digitalRead(nc_row_pins[row]);
       if (value == HIGH && state) {
         handleKeyEvent(index, state = false);

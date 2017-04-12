@@ -12,21 +12,13 @@ const byte invalid = 0xff;
 // start address of global settings storage area in EEPROM
 const int GlobalSettingsAddress = 0;
 
-const int n_global_settings = 6;
-
-enum GlobalParameter {
-  BassBoostParam, BoostFreqParam, 
-  VelocitySlopeParam, VelocityOffsetParam, 
-  FilterVelocitySlopeParam, FilterVelocityOffsetParam
-};
-
 struct GlobalSettings {
-  byte SD2_bass_boost;
-  byte SD2_boost_freq;
-  byte SD2_velo_slope;
-  byte SD2_velo_offset;
-  byte SD2_filter_velo_slope;
-  byte SD2_filter_velo_offset;
+  byte output_channel;
+  byte reserved2;
+  byte reserved3;
+  byte reserved4;
+  byte reserved5;
+  byte reserved6;
   byte reserved7;
   byte reserved8;
   byte reserved9;
@@ -40,23 +32,12 @@ GlobalSettings globalSettings;
  * reasonable initial values will be chosen for the global settings.
  */
 void readGlobals() {
-  // todo
   // TODO checksum and detection of corrupt data
   byte *b = (byte*)&globalSettings;
   for (int i = 0; i < sizeof(GlobalSettings); i++)
     b[i] = EEPROM.read(GlobalSettingsAddress + i);
-  if (globalSettings.SD2_bass_boost > max_boost_gain)
-    globalSettings.SD2_bass_boost = 0;
-  if (globalSettings.SD2_boost_freq > max_boost_freq)
-    globalSettings.SD2_boost_freq = max_boost_freq/2;
-  if (globalSettings.SD2_velo_slope > MIDI_CONTROLLER_MAX)
-    globalSettings.SD2_velo_slope = MIDI_CONTROLLER_MEAN;
-  if (globalSettings.SD2_velo_offset > MIDI_CONTROLLER_MAX)
-    globalSettings.SD2_velo_offset = MIDI_CONTROLLER_MEAN;
-  if (globalSettings.SD2_filter_velo_slope > MIDI_CONTROLLER_MAX)
-    globalSettings.SD2_filter_velo_slope = MIDI_CONTROLLER_MEAN;
-  if (globalSettings.SD2_filter_velo_offset > MIDI_CONTROLLER_MAX)
-    globalSettings.SD2_filter_velo_offset = MIDI_CONTROLLER_MEAN;
+  if (globalSettings.output_channel > 15)
+    globalSettings.output_channel = 0; // 1st MIDI channel
 }
 
 /**
@@ -71,8 +52,30 @@ void saveGlobals() {
   }
 }
 
+const int n_keys = 88;
+typedef byte Sensitivities[n_keys]; 
+
+Sensitivities sensitivities;
+
 // start address of key velocity storage area in EEPROM
-const int KeyVelocityAddress = 40;
+const int SensivitiesAddress = 40;
+
+void readSensitivities() {
+  // TODO checksum and detection of corrupt data
+  byte *b = (byte*)&sensitivities;
+  for (int i = 0; i < sizeof(Sensitivities); i++)
+    b[i] = EEPROM.read(SensivitiesAddress + i);
+}
+
+void saveSensitivities() {
+  byte *b = (byte*)&sensitivities;
+  for (int i = 0; i < sizeof(Sensitivities); i++) {
+    byte original = EEPROM.read(SensivitiesAddress + i);
+    if (original != b[i])
+      EEPROM.write(SensivitiesAddress + i, b[i]);
+  }
+}
+
 
 /*--------------------------------- state event machine ---------------------------------*/
 
@@ -83,11 +86,4 @@ enum Event {
 };
 
 void process(Event event, int value);
-
-
-
-
-
-
-
 
