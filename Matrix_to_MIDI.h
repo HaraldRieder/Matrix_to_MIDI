@@ -58,21 +58,21 @@ typedef byte Sensitivities[n_keys];
 Sensitivities sensitivities;
 
 // start address of key velocity storage area in EEPROM
-const int SensivitiesAddress = 40;
+const int SensitivitiesAddress = 40;
 
 void readSensitivities() {
   // TODO checksum and detection of corrupt data
   byte *b = (byte*)&sensitivities;
   for (int i = 0; i < sizeof(Sensitivities); i++)
-    b[i] = EEPROM.read(SensivitiesAddress + i);
+    b[i] = EEPROM.read(SensitivitiesAddress + i);
 }
 
 void saveSensitivities() {
   byte *b = (byte*)&sensitivities;
   for (int i = 0; i < sizeof(Sensitivities); i++) {
-    byte original = EEPROM.read(SensivitiesAddress + i);
+    byte original = EEPROM.read(SensitivitiesAddress + i);
     if (original != b[i])
-      EEPROM.write(SensivitiesAddress + i, b[i]);
+      EEPROM.write(SensitivitiesAddress + i, b[i]);
   }
 }
 

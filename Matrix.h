@@ -95,7 +95,7 @@ int max_scan_time_ms;
 void scanMatrix() {
   int t_start = millis();
   for (int row = 0; row < n_rows; row++) {
-    digitalWrite(row_pins[row], LOW);    
+    digitalWrite(row_pins[row], LOW);
     for (int column = 0; column < n_columns; column++) {
       digitalWrite(column_pins[column], HIGH);
       int index = column + row * n_columns;

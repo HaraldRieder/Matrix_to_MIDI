@@ -10,9 +10,6 @@
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
-/* data input indicator (MIDI) */
-const int led_pin = 13;
-
 midi::Channel channel = 1;
 
 /*--------------------------------- setup and main loop ---------------------------------*/
@@ -21,7 +18,6 @@ int slice_counter = 0;
 const int n_slices = 7;
 
 void setup() {
-  pinMode(led_pin, OUTPUT);
   //pinMode(push_btn_exit_pin, INPUT_PULLUP);
   
   setupMatrixPins();
@@ -30,6 +26,8 @@ void setup() {
 
   readGlobals();
   readSensitivities();
+
+  midi1.begin(1/*dummy input channel*/);
   
   // disable timers / avoid jitter
   //TIMSK0 = 0; leave timer 0 enabled so that we still have delay() and millis() but not tone()
@@ -45,15 +43,16 @@ int max_ex_loop_time_ms;
 int t_start = -1;
 
 void loop() {
-  if (t_start > 0)
-    max_ex_loop_time_ms = max(max_ex_loop_time_ms, millis() - t_start);
+//digitalWrite(led_pin, LOW);delay(300);digitalWrite(led_pin, HIGH);delay(300);digitalWrite(led_pin, LOW);    
+//  if (t_start > 0)
+//    max_ex_loop_time_ms = max(max_ex_loop_time_ms, millis() - t_start);
   
-  int inval;
+//  int inval;
   
   // call this often
   //midi1.read();
 
-  switch (slice_counter) {
+//  switch (slice_counter) {
     /*
     case 0:
       inval = digitalRead(push_btn_enter_pin);
@@ -113,14 +112,14 @@ void loop() {
       // reserved
       break;
       */
-  }
-  scanMatrix();
+//  }
+    scanMatrix();
   
-  slice_counter++;
-  if (slice_counter >= n_slices)
-    slice_counter = 0;
+//  slice_counter++;
+//  if (slice_counter >= n_slices)
+//    slice_counter = 0;
 
-  t_start = millis();
+//  t_start = millis();
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
@@ -252,10 +251,10 @@ void handleKeyEvent(int key, boolean on) {
     midi::DataByte note = (midi::DataByte)(key + A);
     if (on) { 
       midi1.sendNoteOn(note, DefaultVelocity, channel);
-      digitalWrite(led_pin, LOW);
+//      digitalWrite(led_pin, LOW);
     }
     else {
       midi1.sendNoteOff(note, DefaultVelocity, channel);
-      digitalWrite(led_pin, HIGH);
+//      digitalWrite(led_pin, HIGH);
     }
 }
