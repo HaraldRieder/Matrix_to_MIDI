@@ -1,3 +1,5 @@
+#include "Dynamic_sqrt.h"
+
 /* 
 keyboard scanned by diode matrix
 */
@@ -7,12 +9,13 @@ keyboard scanned by diode matrix
  * @param key 0 = most left key, normally an A (88 keys) 
  * @param on true if the key has been pressed, else it has been released
  */
-void handleKeyEvent(int key, boolean on);
+void handleKeyEvent(int key, byte velocity);
 
 const int n_columns = 8; // neighbour keys belong to different columns
 const int n_rows = 11; // 8 * 11= 88 keys
 
-boolean key_states[n_columns * n_rows] ; // all off, most left key = 0
+/* 0 or when the key pressure started in Arduino milli seconds (uptime) */
+long key_states[n_columns * n_rows] ; // all off, most left key = 0
 
 /* normally closed pins (Ruhekontakte) */
 const int nc_row_pins[n_rows] = {
@@ -99,14 +102,23 @@ void scanMatrix() {
     for (int column = 0; column < n_columns; column++) {
       digitalWrite(column_pins[column], HIGH);
       int index = column + row * n_columns;
-      boolean & state = key_states[index]; 
+      long & state = key_states[index]; 
+      // normally closed contact triggers start of time measurement and key-off
       int value = digitalRead(nc_row_pins[row]);
-      if (value == HIGH && state) {
-        handleKeyEvent(index, state = false);
+      if (value == HIGH && state < 0) {
+        handleKeyEvent(index, 0);
+        state = 0;
+      } else if (value == LOW && state == 0) {
+        state = millis(); // now state > 0
       }
+      // normally open contact triggers key-on
       value = digitalRead(no_row_pins[row]);
-      if (value == HIGH && !state) {
-        handleKeyEvent(index, state = true);
+      if (value == HIGH && state > 0) {
+        int t = millis() - state;
+        if (t >= t_max)
+          t = t_max - 1;
+        handleKeyEvent(index, velocities[t]);
+        state = -1;
       }
       digitalWrite(column_pins[column], LOW);
     }

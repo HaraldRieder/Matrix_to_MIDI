@@ -26,6 +26,7 @@ void setup() {
 
   readGlobals();
   readSensitivities();
+  initVelocities();
 
   midi1.begin(1/*dummy input channel*/);
   
@@ -244,13 +245,13 @@ void handleNoteOff(byte channel, byte note, byte velocity)
 /*--------------------------------- foot pedal ---------------------------------*/
 
 /* lowest key */
-const midi::DataByte A = 21; // to be verified...
+const midi::DataByte A = 21;
 const midi::DataByte DefaultVelocity = 80;
 
-void handleKeyEvent(int key, boolean on) {
+void handleKeyEvent(int key, byte velocity) {
     midi::DataByte note = (midi::DataByte)(key + A);
-    if (on) { 
-      midi1.sendNoteOn(note, DefaultVelocity, channel);
+    if (velocity) { 
+      midi1.sendNoteOn(note, velocity, channel);
 //      digitalWrite(led_pin, LOW);
     }
     else {
