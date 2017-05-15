@@ -17,8 +17,18 @@ midi::Channel channel = 1;
 int slice_counter = 0;
 const int n_slices = 7;
 
+const int meter_pin = 2;
+
 void setup() {
   //pinMode(push_btn_exit_pin, INPUT_PULLUP);
+  pinMode(meter_pin, OUTPUT);
+  for (int i = 0 ; i < 3; i++) {
+  analogWrite(meter_pin, 199);
+  delay(2000);
+  analogWrite(meter_pin, 1);
+  delay(2000);
+  }
+  analogWrite(meter_pin, 199);
   
   setupMatrixPins();
 
@@ -34,7 +44,7 @@ void setup() {
   //TIMSK0 = 0; leave timer 0 enabled so that we still have delay() and millis() but not tone()
   TIMSK1 = 0;
   TIMSK2 = 0;
-  TIMSK3 = 0;
+  //TIMSK3 = 0; we need timer 3 for PWM at pin 2
   TIMSK4 = 0;
   TIMSK5 = 0;
 }
