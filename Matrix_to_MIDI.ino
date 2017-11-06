@@ -17,18 +17,21 @@ midi::Channel channel = 1;
 int slice_counter = 0;
 const int n_slices = 7;
 
+const int meter_max = 255; // = 3*5*17 = possible deltas
 const int meter_pin = 2;
+int meter_val;
+const int meter_delta = 17;
+
+const int rocker_switch_1_pin = 22;
+const int rocker_switch_2_pin = 23;
+boolean rocker_switch_1 = false;
+boolean rocker_switch_2 = false;
 
 void setup() {
-  //pinMode(push_btn_exit_pin, INPUT_PULLUP);
+  pinMode(rocker_switch_1_pin, INPUT_PULLUP);
+  pinMode(rocker_switch_2_pin, INPUT_PULLUP);
   pinMode(meter_pin, OUTPUT);
-  for (int i = 0 ; i < 3; i++) {
-  analogWrite(meter_pin, 199);
-  delay(2000);
-  analogWrite(meter_pin, 1);
-  delay(2000);
-  }
-  analogWrite(meter_pin, 199);
+  analogWrite(meter_pin, meter_val = meter_max);
   
   setupMatrixPins();
 
@@ -63,72 +66,24 @@ void loop() {
   // call this often
   //midi1.read();
 
-//  switch (slice_counter) {
-    /*
+  switch (slice_counter) {
     case 0:
-      inval = digitalRead(push_btn_enter_pin);
-      if (inval != push_btn_enter_val) {
-        push_btn_enter_val = inval;
-        if (inval == HIGH)
-          process(enterBtn, inval);
-      }
+      rockerSwitch();
       break;
-    case 1:
-      inval = digitalRead(push_btn_exit_pin);
-      if (inval != push_btn_exit_val) {
-        push_btn_exit_val = inval;
-        if (inval == HIGH)
-          process(exitBtn, inval);
-      }
-      break;
-    case 2:
-      inval = digitalRead(ext_switch_1_pin);
-      if (inval != ext_switch_1_val) 
-        handleExtSwitch1(ext_switch_1_val = inval);
-      break;
-    case 3:
-      inval = digitalRead(ext_switch_2_pin);
-      if (inval != ext_switch_2_val)
-        handleExtSwitch2(ext_switch_2_val = inval);
-      break;
-    case 4:
-      inval = analogRead(pitch_wheel_pin);
-      if (inval > pitch_wheel_val) {
-        if (pitch_wheel_up || inval > pitch_wheel_val + wheel_hysteresis) {
-          handlePitchWheel(pitch_wheel_val = inval);
-          pitch_wheel_up = true;
-        }
-      } else if (inval < pitch_wheel_val) {
-        if (!pitch_wheel_up || inval < pitch_wheel_val - wheel_hysteresis) {
-          handlePitchWheel(pitch_wheel_val = inval);
-          pitch_wheel_up = false;
-        }
-      }
-      break;
-    case 5:
-      inval = analogRead(mod_wheel_pin);
-      if (inval > mod_wheel_val) {
-        if (mod_wheel_up || inval > mod_wheel_val + wheel_hysteresis) {
-          handleModWheel(mod_wheel_val = inval);
-          mod_wheel_up = true;
-        }
-      } else if (inval < mod_wheel_val) {
-        if (!mod_wheel_up || inval < mod_wheel_val - wheel_hysteresis) {
-          handleModWheel(mod_wheel_val = inval);
-          mod_wheel_up = false;
-        }
-      }
-      break;
+    case 1:  
+    case 2:  
+    case 3:  
+    case 4:  
+    case 5:  
     case 6:
       // reserved
       break;
-      */
-//  }
-    scanMatrix();
+  }
+  scanMatrix();
   
-//  slice_counter++;
-//  if (slice_counter >= n_slices)
-//    slice_counter = 0;
+  slice_counter++;
+  if (slice_counter >= n_slices)
+    slice_counter = 0;
 
 //  t_start = millis();
 }
@@ -183,33 +138,34 @@ void process(Event event, int value) {
   */
 }
 
-/*--------------------------------- external switches ---------------------------------*/
+/*--------------------------------- rocker switch ---------------------------------*/
 
-/**
- * Sends sustain on/off depending on the 
- * input voltage and on whether the external
- * switch (in the foot pedal) is an opener or closer.
- */
- /*
-void handleExtSwitch1(int inval) {
-  boolean off = ext_switch_1_opener ? (inval == LOW) : (inval == HIGH);
-  switch (state) {
-    case playingSound:
-    case selectSound:
-      midi1.sendControlChange(midi::Sustain, off ? 0 : MIDI_CONTROLLER_MAX, sound_channel);
-      break;
-    default:
-      for (int i = 0; i < n_sounds_per_preset; i++) {
-        Sound * s = currentPresetSounds[i];
-        if (s->ext_switch_1_ctrl_no != NoSwitch)
-          midi1.sendControlChange(
-            s->ext_switch_1_ctrl_no, 
-            off ? (s->ext_switch_1_ctrl_no==Rotor?MIDI_CONTROLLER_MEAN:0) : MIDI_CONTROLLER_MAX, 
-            s->channel);
-      }
+void rockerSwitch() {
+  int val = digitalRead(rocker_switch_1_pin);
+  if (val == LOW) {
+    rocker_switch_1 = true;
   }
+  else if (rocker_switch_1) {
+    // falling edge
+    rocker_switch_1 = false;
+    if (meter_val > 0) {
+      meter_val -= meter_delta;
+    }
+    
+  }
+  val = digitalRead(rocker_switch_2_pin);
+  if (val == LOW) {
+    rocker_switch_2 = true;
+  }
+  else if (rocker_switch_2) {
+    // falling edge
+    rocker_switch_2 = false;
+    if (meter_val < meter_max) {
+      meter_val += meter_delta;
+    }
+  }
+  analogWrite(meter_pin, meter_val);
 }
-*/
 
 /*--------------------------------- note  on / note off ---------------------------------*/
 /*
