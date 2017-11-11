@@ -15,7 +15,7 @@ const byte invalid = 0xff;
 /*--------- global settings ---------*/
 // start address of global settings storage area in EEPROM
 const int SettingsAddress = 0;
-const int n_keys = 88;
+const int n_keys = n_columns * n_rows;
 typedef byte Sensitivities[n_keys]; 
 Sensitivities sensitivities;
 

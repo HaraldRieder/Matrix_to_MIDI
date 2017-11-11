@@ -146,19 +146,23 @@ void process(Event event, int value) {
       }
       return;
       
-    case key_sensitivity:  // TODO
+    case key_sensitivity:
       switch (event) {
         case up_short:
-          //if (settings.sensitivity < meter_max) {
-          //  settings.sensitivity += meter_delta;
-          //}
-          //analogWrite(meter_pin, settings.sensitivity);
+          if (last_key != no_key) {
+            if (settings.sensitivities[last_key] < meter_max) {
+              settings.sensitivities[last_key] += meter_delta;
+            }
+            analogWrite(meter_pin, settings.sensitivities[last_key]);
+          }
           return;
         case down_short:
-          //if (settings.sensitivity > 0) {
-          //  settings.sensitivity -= meter_delta;
-          //}
-          //analogWrite(meter_pin, settings.sensitivity);
+          if (last_key != no_key) {
+            if (settings.sensitivities[last_key] > 0) {
+              settings.sensitivities[last_key] -= meter_delta;
+            }
+            analogWrite(meter_pin, settings.sensitivities[last_key]);
+          }
           return;
         case up_long:
         case down_long:
@@ -176,7 +180,7 @@ void process(Event event, int value) {
 /*--------------------------------- rocker switch ---------------------------------*/
 
 unsigned long last_switch_time;
-const unsigned long long_time = 3000; 
+const unsigned long long_time = 2500; 
 
 void rockerSwitch() {
   int val = digitalRead(rocker_switch_1_pin);
@@ -246,7 +250,7 @@ void handleNoteOff(byte channel, byte note, byte velocity)
   digitalWrite(led_pin, HIGH);
 }
 */
-/*--------------------------------- foot pedal ---------------------------------*/
+/*--------------------------------- event from matrix ---------------------------------*/
 
 /* lowest key */
 const midi::DataByte A = 21;
@@ -256,6 +260,7 @@ void handleKeyEvent(int key, byte velocity) {
     midi::DataByte note = (midi::DataByte)(key + A);
     if (velocity) { 
       midi1.sendNoteOn(note, velocity, channel);
+      last_key = key;
 //      digitalWrite(led_pin, LOW);
     }
     else {
