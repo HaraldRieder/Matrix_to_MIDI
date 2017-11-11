@@ -5,15 +5,23 @@ const byte MIDI_CONTROLLER_MEAN = 64;
 
 /*--------------------------------- persistent settings ---------------------------------*/
 
+const byte meter_max = 255; // = 3*5*17 = possible deltas
+const byte meter_delta = 17;
+
+
 // the values in a fresh EEPROM
 const byte invalid = 0xff;
 
 /*--------- global settings ---------*/
 // start address of global settings storage area in EEPROM
-const int GlobalSettingsAddress = 0;
+const int SettingsAddress = 0;
+const int n_keys = 88;
+typedef byte Sensitivities[n_keys]; 
+Sensitivities sensitivities;
 
-struct GlobalSettings {
+struct Settings {
   byte output_channel;
+  byte sensitivity;
   byte reserved2;
   byte reserved3;
   byte reserved4;
@@ -22,68 +30,49 @@ struct GlobalSettings {
   byte reserved7;
   byte reserved8;
   byte reserved9;
+  Sensitivities sensitivities;
 };
 
-GlobalSettings globalSettings;
+Settings settings;
 
 /**
- * Reads global settings from EEPROM.
+ * Reads settings from EEPROM.
  * When the EEPROM still contains 0xff defaults,
- * reasonable initial values will be chosen for the global settings.
+ * reasonable initial values will be chosen for the settings.
  */
-void readGlobals() {
+void readSettings() {
   // TODO checksum and detection of corrupt data
-  byte *b = (byte*)&globalSettings;
-  for (int i = 0; i < sizeof(GlobalSettings); i++)
-    b[i] = EEPROM.read(GlobalSettingsAddress + i);
-  if (globalSettings.output_channel > 15)
-    globalSettings.output_channel = 0; // 1st MIDI channel
-}
-
-/**
- * Saves global settings to EEPROM. To maximize EEPROM lifetime only changed values are actually written. 
- */
-void saveGlobals() {
-  byte *b = (byte*)&globalSettings;
-  for (int i = 0; i < sizeof(GlobalSettings); i++) {
-    byte original = EEPROM.read(GlobalSettingsAddress + i);
-    if (original != b[i])
-      EEPROM.write(GlobalSettingsAddress + i, b[i]);
+  byte *b = (byte*)&settings;
+  for (int i = 0; i < sizeof(Settings); i++)
+    b[i] = EEPROM.read(SettingsAddress + i);
+  if (settings.output_channel > 15) {
+    // very first read 
+    settings.output_channel = 0; // 1st MIDI channel
+    int mean_value = (meter_max / (meter_delta*2)) * meter_delta;
+    settings.sensitivity = mean_value;
+    for (int i = 0; i < n_keys; i++) {
+      settings.sensitivities[i] = mean_value;
+    }
   }
 }
 
-const int n_keys = 88;
-typedef byte Sensitivities[n_keys]; 
-
-Sensitivities sensitivities;
-
-// start address of key velocity storage area in EEPROM
-const int SensitivitiesAddress = 40;
-
-void readSensitivities() {
-  // TODO checksum and detection of corrupt data
-  byte *b = (byte*)&sensitivities;
-  for (int i = 0; i < sizeof(Sensitivities); i++)
-    b[i] = EEPROM.read(SensitivitiesAddress + i);
-}
-
-void saveSensitivities() {
-  byte *b = (byte*)&sensitivities;
-  for (int i = 0; i < sizeof(Sensitivities); i++) {
-    byte original = EEPROM.read(SensitivitiesAddress + i);
+/**
+ * Saves settings to EEPROM. To maximize EEPROM lifetime only changed values are actually written. 
+ */
+void saveSettings() {
+  byte *b = (byte*)&settings;
+  for (int i = 0; i < sizeof(Settings); i++) {
+    byte original = EEPROM.read(SettingsAddress + i);
     if (original != b[i])
-      EEPROM.write(SensitivitiesAddress + i, b[i]);
+      EEPROM.write(SettingsAddress + i, b[i]);
   }
 }
 
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-enum State {
-};
-
-enum Event {
-};
+enum State { idle, global_sensitivity, key_sensitivity};
+enum Event { up_long, down_long, up_short, down_short };
 
 void process(Event event, int value);
 

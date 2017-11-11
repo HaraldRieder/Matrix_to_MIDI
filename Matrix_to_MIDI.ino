@@ -17,10 +17,11 @@ midi::Channel channel = 1;
 int slice_counter = 0;
 const int n_slices = 7;
 
-const int meter_max = 255; // = 3*5*17 = possible deltas
+const int led_pin = A3;
+
 const int meter_pin = 2;
-int meter_val;
-const int meter_delta = 17;
+const int no_key = -1;
+int last_key = no_key;
 
 const int rocker_switch_1_pin = 22;
 const int rocker_switch_2_pin = 23;
@@ -28,17 +29,19 @@ boolean rocker_switch_1 = false;
 boolean rocker_switch_2 = false;
 
 void setup() {
+  Serial.begin(9600); // debugging
   pinMode(rocker_switch_1_pin, INPUT_PULLUP);
   pinMode(rocker_switch_2_pin, INPUT_PULLUP);
   pinMode(meter_pin, OUTPUT);
-  analogWrite(meter_pin, meter_val = meter_max);
+  analogWrite(meter_pin, 0);
+  pinMode(led_pin, OUTPUT);
+  digitalWrite(led_pin, HIGH);
   
   setupMatrixPins();
 
   //ext_switch_1_val = digitalRead(ext_switch_1_pin);
 
-  readGlobals();
-  readSensitivities();
+  readSettings();
   initVelocities();
 
   midi1.begin(1/*dummy input channel*/);
@@ -90,8 +93,7 @@ void loop() {
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-//State state = playingPreset;
-byte * param_value ;
+State state = idle;
 
 /**
  * The state event machine for the user interface.
@@ -99,72 +101,108 @@ byte * param_value ;
  * @value optional value, meaning depends on event type
  */
 void process(Event event, int value) {
-  static int int_param_value;
-/*
+
   switch (state) {
 
-    case editGlobals:
+    case idle:
       switch (event) {
-        case exitBtn:
-          saveGlobals();
-          state = showInfo;
-          displayInfo();
+        case up_long:
+          digitalWrite(led_pin, LOW);
+          state = global_sensitivity;
+          last_key = no_key;
+          analogWrite(meter_pin, settings.sensitivity);
           return;
-        case modWheel:
-           value = value * n_global_settings / (MIDI_CONTROLLER_MAX+1);
-           if (value != global_parameter) {
-             global_parameter = (GlobalParameter)value;
-             setParamValuePointer(global_parameter);
-             int_param_value = map_from_byte(global_parameter, *param_value);
-             displayGlobalParameter(global_parameter, *param_value);
-           }
-          return;
-        case pitchWheel:
-          // increment/decrement by 1 or by 10 
-          {
-            int mini, maxi, range;
-            getMinMaxRange(global_parameter, mini, maxi, range);
-            if (handlePitchWheelEvent(value, mini, maxi, &int_param_value)) {
-              *param_value = map_to_byte(global_parameter, int_param_value);
-              displayGlobalParameter(global_parameter, *param_value);
-              sendGlobals();
-            }
-          }
+        case down_long:
+          digitalWrite(led_pin, LOW);
+          state = key_sensitivity;
+          last_key = no_key;
+          analogWrite(meter_pin, meter_max);
           return;
       }
       return;
       
-  }
-  */
+    case global_sensitivity:
+      switch (event) {
+        case up_short:
+          if (settings.sensitivity < meter_max) {
+            settings.sensitivity += meter_delta;
+          }
+          analogWrite(meter_pin, settings.sensitivity);
+          return;
+        case down_short:
+          if (settings.sensitivity > 0) {
+            settings.sensitivity -= meter_delta;
+          }
+          analogWrite(meter_pin, settings.sensitivity);
+          return;
+        case up_long:
+        case down_long:
+          // exit
+          state = idle;
+          saveSettings();
+          analogWrite(meter_pin, 0);
+          digitalWrite(led_pin, HIGH);
+          return;
+      }
+      return;
+      
+    case key_sensitivity:  // TODO
+      switch (event) {
+        case up_short:
+          //if (settings.sensitivity < meter_max) {
+          //  settings.sensitivity += meter_delta;
+          //}
+          //analogWrite(meter_pin, settings.sensitivity);
+          return;
+        case down_short:
+          //if (settings.sensitivity > 0) {
+          //  settings.sensitivity -= meter_delta;
+          //}
+          //analogWrite(meter_pin, settings.sensitivity);
+          return;
+        case up_long:
+        case down_long:
+          // exit
+          state = idle;
+          saveSettings();
+          analogWrite(meter_pin, 0);
+          digitalWrite(led_pin, HIGH);
+          return;
+      }
+      return;
+  }  
 }
 
 /*--------------------------------- rocker switch ---------------------------------*/
 
+unsigned long last_switch_time;
+const unsigned long long_time = 3000; 
+
 void rockerSwitch() {
   int val = digitalRead(rocker_switch_1_pin);
   if (val == LOW) {
-    rocker_switch_1 = true;
+    if (!rocker_switch_1) {
+      rocker_switch_1 = true;
+      last_switch_time = millis();
+    }
   }
   else if (rocker_switch_1) {
     // falling edge
     rocker_switch_1 = false;
-    if (meter_val > 0) {
-      meter_val -= meter_delta;
-    }
-    
+    process(millis() > last_switch_time + long_time ? up_long : up_short, -1);
   }
   val = digitalRead(rocker_switch_2_pin);
   if (val == LOW) {
-    rocker_switch_2 = true;
+    if (!rocker_switch_2) {
+      rocker_switch_2 = true;
+      last_switch_time = millis();
+    }
   }
   else if (rocker_switch_2) {
     // falling edge
     rocker_switch_2 = false;
-    if (meter_val < meter_max) {
-      meter_val += meter_delta;
-    }
+    process(millis() > last_switch_time + long_time ? down_long : down_short, -1);
   }
-  analogWrite(meter_pin, meter_val);
 }
 
 /*--------------------------------- note  on / note off ---------------------------------*/
