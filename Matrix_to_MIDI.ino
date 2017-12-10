@@ -148,6 +148,10 @@ void process(Event event, int value) {
       
     case key_sensitivity:
       switch (event) {
+        case note_on:
+          last_key = value;
+          analogWrite(meter_pin, settings.sensitivities[last_key]);
+          break;
         case up_short:
           if (last_key != no_key) {
             if (settings.sensitivities[last_key] < meter_max) {
@@ -209,47 +213,6 @@ void rockerSwitch() {
   }
 }
 
-/*--------------------------------- note  on / note off ---------------------------------*/
-/*
-void handleNoteOn(byte channel, byte note, byte velocity)
-{
-  digitalWrite(led_pin, LOW);
-  switch (state) {
-    case playingSound: 
-    case selectSound:
-      midi1.sendNoteOn(note, velocity, sound_channel);
-      break;
-    default: // Preset
-      if (currentPreset.split_point == invalid)
-        midi1.sendNoteOn(note, velocity, right_channel);
-      else 
-        midi1.sendNoteOn(note, velocity, note > currentPreset.split_point ? right_channel : left_channel);
-      // handle note on with velocity 0 like note off
-      if (velocity == 0 && state != playingPreset)
-        process(noteEvent, note);
-  }
-  digitalWrite(led_pin, HIGH);
-}
-
-void handleNoteOff(byte channel, byte note, byte velocity)
-{
-  digitalWrite(led_pin, LOW);
-  switch (state) {
-    case playingSound: 
-    case selectSound:
-      midi1.sendNoteOff(note, velocity, sound_channel);
-      break;
-    default: // Preset
-      if (currentPreset.split_point == invalid)
-        midi1.sendNoteOff(note, velocity, right_channel);
-      else 
-        midi1.sendNoteOff(note, velocity, note > currentPreset.split_point ? right_channel : left_channel);
-      if (state != playingPreset)
-        process(noteEvent, note);
-  }
-  digitalWrite(led_pin, HIGH);
-}
-*/
 /*--------------------------------- event from matrix ---------------------------------*/
 
 /* lowest key */
@@ -260,7 +223,9 @@ void handleKeyEvent(int key, byte velocity) {
     midi::DataByte note = (midi::DataByte)(key + A);
     if (velocity) { 
       midi1.sendNoteOn(note, velocity, channel);
-      last_key = key;
+      if (state == key_sensitivity) {
+        process(note_on, key);
+      }
 //      digitalWrite(led_pin, LOW);
     }
     else {
