@@ -19,58 +19,62 @@ long key_states[n_columns * n_rows] ; // all off, most left key = 0
 
 /* normally closed pins (Ruhekontakte) */
 const int nc_row_pins[n_rows] = {
-  43, // R1 
-  40, // R2 
-  53, // R3 
-  46, // R4
-  52, // R5 
-  5,  // R6 
-  37, // R7 
-  30, // R8 
-  31, // R9 
-  25, // R10 
-  24  // R11 
+// Arduino pin // matrix pin ATMega port+bit
+   43,         // R1         L6
+   40,         // R2         G1
+   53,         // R3         B0
+   46,         // R4         L3
+   52,         // R5         B1
+   5,          // R6         E3
+   37,         // R7         C0
+   30,         // R8         C7
+   31,         // R9         C6
+   25,         // R10        A3
+   24          // R11        A2
 };
 
 /* normally open pins (Arbeitskontakte) */
 const int no_row_pins[n_rows] = {
-  47, // A1 
-  36, // A2 
-  49, // A3 
-  42, // A4 
-  48, // A5 
-  4,  // A6 marked
-  41, // A7 
-  34, // A8 
-  35, // A9 
-  29, // A10 
-  28  // A11 
+// Arduino pin // matrix pin ATMega port+bit
+   47,         // A1         L2
+   36,         // A2         C1
+   49,         // A3         L0
+   42,         // A4         L7
+   48,         // A5         L1
+   4,          // A6 marked  G5
+   41,         // A7         G0
+   34,         // A8         C3
+   35,         // A9         C2
+   29,         // A10        A7
+   28          // A11        A6
 };
 
 const int row_pins[n_rows] = {
-  45, // 1 
-  38, // 2 
-  51, // 3 
-  44, // 4 
-  50, // 5 
-  3,  // 6 
-  39, // 7 
-  32, // 8 
-  33, // 9 
-  27, // 10
-  26  // 11
+// Arduino pin // 1..11      ATMega port+bit
+   45,         // 1          L4
+   38,         // 2          D7
+   51,         // 3          B2
+   44,         // 4          L5
+   50,         // 5          B3 
+   3,          // 6          E5
+   39,         // 7          G2
+   32,         // 8          C5
+   33,         // 9          C4
+   27,         // 10         A5
+   26          // 11         A4
 };
 
 /* These are connected to the anodes of the diodes. */
 const int column_pins[n_columns] = {
-  6,  // G1
-  7,  // G2
-  8,  // G3
-  9,  // G4
-  10, // G5
-  11, // G6
-  12, // G7
-  13  // G8 marked
+// Arduino pin // matrix pin ATMega port+bit
+   6,          // G1         H3        
+   7,          // G2         H4
+   8,          // G3         H5
+   9,          // G4         H6
+   10,         // G5         B4
+   11,         // G6         B5
+   12,         // G7         B6
+   13          // G8 marked  B7
 };
 
 /**
@@ -90,6 +94,9 @@ void setupMatrixPins() {
 }
 
 int max_scan_time_ms;
+
+//#define PORTABLE_IO
+#ifdef PORTABLE_IO
 
 /**
  * To be called in loop.
@@ -126,4 +133,63 @@ void scanMatrix() {
   }
   max_scan_time_ms = max(max_scan_time_ms, millis() - t_start);
 }
+
+#else
+// This variant uses direct port manipulation and is faster than the method above.
+// http://harperjiangnew.blogspot.de/2013/05/arduino-port-manipulation-on-mega-2560.html
+
+/** 
+ * To be called in loop.
+ * Calls handleKeyEvent().
+ */
+void scanMatrix() {
+  int t_start = millis();
+  for (int row = 0; row < n_rows; row++) {
+    switch (row) {
+      case 0:  PORTL ^= (1<<4); break;
+      case 1:  PORTD ^= (1<<7); break;
+      case 2:  PORTB ^= (1<<2); break;
+      case 3:  PORTL ^= (1<<5); break;
+      case 4:  PORTB ^= (1<<3); break;
+      case 5:  PORTE ^= (1<<5); break;
+      case 6:  PORTG ^= (1<<2); break;
+      case 7:  PORTC ^= (1<<5); break;
+      case 8:  PORTC ^= (1<<4); break;
+      case 9:  PORTA ^= (1<<5); break;
+      case 10: PORTA ^= (1<<4); break;
+    }
+    for (int column = 0; column < n_columns; column++) {
+      digitalWrite(column_pins[column], HIGH);
+      int index = column + row * n_columns;
+      long & state = key_states[index]; 
+      // normally closed contact triggers start of time measurement and key-off
+      int value = digitalRead(nc_row_pins[row]);
+      if (value == HIGH && state < 0) {
+        handleKeyEvent(index, 0);
+        state = 0;
+      } else if (value == LOW && state == 0) {
+        state = millis(); // now state > 0
+      }
+      // normally open contact triggers key-on
+      value = digitalRead(no_row_pins[row]);
+      if (value == HIGH && state > 0) {
+        int t = millis() - state;
+        if (t >= t_max)
+          t = t_max - 1;
+        handleKeyEvent(index, velocities[t]);
+        state = -1;
+      }
+      // set all matrix G pins to LOW
+      digitalWrite(column_pins[column], LOW);
+      //PORTH &= 0b10000111;
+      //PORTG &= 0b00001111;
+    }
+    digitalWrite(row_pins[row], HIGH);    
+  }
+  max_scan_time_ms = max(max_scan_time_ms, millis() - t_start);
+}
+
+#endif
+ 
+
 
