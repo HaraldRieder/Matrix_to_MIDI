@@ -159,7 +159,16 @@ void scanMatrix() {
       case 10: PORTA ^= (1<<4); break;
     }
     for (int column = 0; column < n_columns; column++) {
-      digitalWrite(column_pins[column], HIGH);
+      switch (column) {
+        case 0: PORTH |= (1<<3); break;
+        case 1: PORTH |= (1<<4); break;
+        case 2: PORTH |= (1<<5); break;
+        case 3: PORTH |= (1<<6); break;
+        case 4: PORTB |= (1<<4); break;
+        case 5: PORTB |= (1<<5); break;
+        case 6: PORTB |= (1<<6); break;
+        case 7: PORTB |= (1<<7); break;
+      }
       int index = column + row * n_columns;
       long & state = key_states[index]; 
       // normally closed contact triggers start of time measurement and key-off
