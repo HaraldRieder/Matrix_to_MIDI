@@ -88,8 +88,7 @@ void loop() {
       // reserved
       break;
   }
-  for (int i = 0; i < 100; i++) 
-    scanMatrix();
+  scanMatrix();
   
   slice_counter++;
   if (slice_counter >= n_slices)
