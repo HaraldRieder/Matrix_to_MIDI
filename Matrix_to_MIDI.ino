@@ -56,16 +56,22 @@ void setup() {
 }
 
 // max. time Arduino consumes between 2 calls of loop()
-int max_ex_loop_time_ms;
+int max_ex_loop_time_ms = 0;
 int t_start = -1;
 
+// report the max. time the Arduino needs per loop, highest observed value: 2 ms
+#define DEBUG_EX_LOOP_TIME
+
 void loop() {
-//digitalWrite(led_pin, LOW);delay(300);digitalWrite(led_pin, HIGH);delay(300);digitalWrite(led_pin, LOW);    
-//  if (t_start > 0)
-//    max_ex_loop_time_ms = max(max_ex_loop_time_ms, millis() - t_start);
-  
-//  int inval;
-  
+  #ifdef DEBUG_EX_LOOP_TIME
+  if (t_start > 0) {
+    int ex_loop_time_ms = millis() - t_start;
+    if (ex_loop_time_ms > max_ex_loop_time_ms) {
+      max_ex_loop_time_ms = ex_loop_time_ms;
+      Serial.print(max_ex_loop_time_ms); Serial.println(" ms max. ex. loop");
+    }
+  }
+  #endif
   // call this often
   //midi1.read();
 
@@ -82,13 +88,15 @@ void loop() {
       // reserved
       break;
   }
-  scanMatrix();
+  for (int i = 0; i < 100; i++) 
+    scanMatrix();
   
   slice_counter++;
   if (slice_counter >= n_slices)
     slice_counter = 0;
-
-//  t_start = millis();
+  #ifdef DEBUG_EX_LOOP_TIME
+  t_start = millis();
+  #endif
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
