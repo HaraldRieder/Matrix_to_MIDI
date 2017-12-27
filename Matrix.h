@@ -193,8 +193,20 @@ void scanMatrix() {
         state = millis(); // now state > 0
       }
       // normally open contact triggers key-on
-      value = digitalRead(no_row_pins[row]);
-      if (value == HIGH && state > 0) {
+      switch (row) {
+        case 0:  value = PINL & (1<<2); break;
+        case 1:  value = PINC & (1<<1); break;
+        case 2:  value = PINL & (1<<0); break;
+        case 3:  value = PINL & (1<<7); break;
+        case 4:  value = PINL & (1<<1); break;
+        case 5:  value = PING & (1<<5); break;
+        case 6:  value = PING & (1<<0); break;
+        case 7:  value = PINC & (1<<3); break;
+        case 8:  value = PINC & (1<<2); break;
+        case 9:  value = PINA & (1<<7); break;
+        case 10: value = PINA & (1<<6); break;
+      }
+      if (value != 0 && state > 0) {
         int t = millis() - state;
         if (t >= t_max)
           t = t_max - 1;
