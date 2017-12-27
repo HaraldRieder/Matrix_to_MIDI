@@ -213,12 +213,30 @@ void scanMatrix() {
         handleKeyEvent(index, velocities[t]);
         state = -1;
       }
-      // set all matrix G pins to LOW
-      digitalWrite(column_pins[column], LOW);
-      //PORTH &= 0b10000111;
-      //PORTG &= 0b00001111;
+      switch (column) {
+        case 0: PORTH ^= (1<<3); break;
+        case 1: PORTH ^= (1<<4); break;
+        case 2: PORTH ^= (1<<5); break;
+        case 3: PORTH ^= (1<<6); break;
+        case 4: PORTB ^= (1<<4); break;
+        case 5: PORTB ^= (1<<5); break;
+        case 6: PORTB ^= (1<<6); break;
+        case 7: PORTB ^= (1<<7); break;
+      }
     }
-    digitalWrite(row_pins[row], HIGH);    
+    switch (row) {
+      case 0:  PORTL |= (1<<4); break;
+      case 1:  PORTD |= (1<<7); break;
+      case 2:  PORTB |= (1<<2); break;
+      case 3:  PORTL |= (1<<5); break;
+      case 4:  PORTB |= (1<<3); break;
+      case 5:  PORTE |= (1<<5); break;
+      case 6:  PORTG |= (1<<2); break;
+      case 7:  PORTC |= (1<<5); break;
+      case 8:  PORTC |= (1<<4); break;
+      case 9:  PORTA |= (1<<5); break;
+      case 10: PORTA |= (1<<4); break;
+    }
   }
   max_scan_time_ms = max(max_scan_time_ms, millis() - t_start);
 }
