@@ -172,8 +172,21 @@ void scanMatrix() {
       int index = column + row * n_columns;
       long & state = key_states[index]; 
       // normally closed contact triggers start of time measurement and key-off
-      int value = digitalRead(nc_row_pins[row]);
-      if (value == HIGH && state < 0) {
+      int value;
+      switch (row) {
+        case 0:  value = PINL & (1<<6); break;
+        case 1:  value = PING & (1<<1); break;
+        case 2:  value = PINB & (1<<0); break;
+        case 3:  value = PINL & (1<<3); break;
+        case 4:  value = PINB & (1<<1); break;
+        case 5:  value = PINE & (1<<3); break;
+        case 6:  value = PINC & (1<<0); break;
+        case 7:  value = PINC & (1<<7); break;
+        case 8:  value = PINC & (1<<6); break;
+        case 9:  value = PINA & (1<<3); break;
+        case 10: value = PINA & (1<<2); break;
+      }
+      if (value != 0 && state < 0) {
         handleKeyEvent(index, 0);
         state = 0;
       } else if (value == LOW && state == 0) {
