@@ -1,4 +1,5 @@
-#include "Dynamic_sqrt.h"
+//#include "Dynamic_sqrt.h"
+#include "Dynamic.h"
 
 // report measured key press times to serial?
 #define DEBUG_TIMES
@@ -128,13 +129,13 @@ void scanMatrix() {
       } else {
         if (state == 0) {
           // start of key-down
-          state = millis(); // now state > 0
+          state = _128_micros(); // now state > 0
         }
       }
       // normally open contact triggers key-on
       value = digitalRead(no_row_pins[row]);
       if (value == HIGH && state > 0) {
-        int t = millis() - state;
+        int t = _128_micros() - state;
         if (t >= t_max)
           t = t_max - 1;
         handleKeyEvent(index, velocities[t]);
@@ -220,7 +221,7 @@ void scanMatrix() {
       } else {
         if (state == 0) {
           // start of key-down
-          state = millis(); // now state > 0
+          state = _128_micros(); // now state > 0
         }
       }
       // normally open contact triggers key-on
@@ -238,13 +239,15 @@ void scanMatrix() {
         case 10: value = PINA & (1<<6); break;
       }
       if (value != 0 && state > 0) {
-        int t = millis() - state;
+        int t = _128_micros() - state;
         if (t >= t_max)
           t = t_max - 1;
         handleKeyEvent(index, velocities[t]);
         state = -1;
         #ifdef DEBUG_TIMES
-        Serial.print(t); Serial.print(" ms "); Serial.println(n);
+        Serial.print(t); 
+        Serial.print(" * 0.128 ms -> "); 
+        Serial.println(velocities[t]); 
         #endif
       }
       switch (column) {
