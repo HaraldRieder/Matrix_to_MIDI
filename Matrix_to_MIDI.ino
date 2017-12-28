@@ -23,8 +23,8 @@ const int meter_pin = 2;
 const int no_key = -1;
 int last_key = no_key;
 
-const int rocker_switch_1_pin = 22;
-const int rocker_switch_2_pin = 23;
+const int rocker_switch_1_pin = 22; // A0
+const int rocker_switch_2_pin = 23; // A1
 boolean rocker_switch_1 = false;
 boolean rocker_switch_2 = false;
 
@@ -56,22 +56,13 @@ void setup() {
 }
 
 // max. time Arduino consumes between 2 calls of loop()
-int max_ex_loop_time_ms = 0;
+long max_ex_scan_time_us = 0;
 int t_start = -1;
 
 // report the max. time the Arduino needs per loop, highest observed value: 2 ms
-#define DEBUG_EX_LOOP_TIME
+#define DEBUG_EX_SCAN_TIME
 
 void loop() {
-  #ifdef DEBUG_EX_LOOP_TIME
-  if (t_start > 0) {
-    int ex_loop_time_ms = millis() - t_start;
-    if (ex_loop_time_ms > max_ex_loop_time_ms) {
-      max_ex_loop_time_ms = ex_loop_time_ms;
-      Serial.print(max_ex_loop_time_ms); Serial.println(" ms max. ex. loop");
-    }
-  }
-  #endif
   // call this often
   //midi1.read();
 
@@ -88,14 +79,23 @@ void loop() {
       // reserved
       break;
   }
+  #ifdef DEBUG_EX_SCAN_TIME
+  if (t_start > 0) {
+    int ex_scan_time_us = micros() - t_start;
+    if (ex_scan_time_us > max_ex_scan_time_us) {
+      max_ex_scan_time_us = ex_scan_time_us;
+      Serial.print(max_ex_scan_time_us); Serial.println(" microseconds max. ex. scan");
+    }
+  }
+  #endif
   scanMatrix();
+  #ifdef DEBUG_EX_SCAN_TIME
+  t_start = micros();
+  #endif
   
   slice_counter++;
   if (slice_counter >= n_slices)
     slice_counter = 0;
-  #ifdef DEBUG_EX_LOOP_TIME
-  t_start = millis();
-  #endif
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
@@ -158,6 +158,10 @@ void process(Event event, int value) {
         case note_on:
           last_key = value;
           analogWrite(meter_pin, settings.sensitivities[last_key]);
+          digitalWrite(led_pin, HIGH);
+          break;
+        case note_off:
+          digitalWrite(led_pin, LOW);
           break;
         case up_short:
           if (last_key != no_key) {
@@ -194,8 +198,9 @@ unsigned long last_switch_time;
 const unsigned long long_time = 2500; 
 
 void rockerSwitch() {
-  int val = digitalRead(rocker_switch_1_pin);
-  if (val == LOW) {
+  //int val = digitalRead(rocker_switch_1_pin);
+  int val = PINA & 0b01;
+  if (val == 0) {
     if (!rocker_switch_1) {
       rocker_switch_1 = true;
       last_switch_time = millis();
@@ -206,8 +211,9 @@ void rockerSwitch() {
     rocker_switch_1 = false;
     process(millis() > last_switch_time + long_time ? up_long : up_short, -1);
   }
-  val = digitalRead(rocker_switch_2_pin);
-  if (val == LOW) {
+  //val = digitalRead(rocker_switch_2_pin);
+  val = PINA & 0b10;
+  if (val == 0) {
     if (!rocker_switch_2) {
       rocker_switch_2 = true;
       last_switch_time = millis();
@@ -233,10 +239,11 @@ void handleKeyEvent(int key, byte velocity) {
       if (state == key_sensitivity) {
         process(note_on, key);
       }
-//      digitalWrite(led_pin, LOW);
     }
     else {
       midi1.sendNoteOff(note, DefaultVelocity, channel);
-//      digitalWrite(led_pin, HIGH);
+      if (state == key_sensitivity) {
+        process(note_off, key);
+      }
     }
 }

@@ -72,7 +72,7 @@ void saveSettings() {
 /*--------------------------------- state event machine ---------------------------------*/
 
 enum State { idle, global_sensitivity, key_sensitivity};
-enum Event { up_long, down_long, up_short, down_short, note_on };
+enum Event { up_long, down_long, up_short, down_short, note_on, note_off };
 
 void process(Event event, int value);
 
