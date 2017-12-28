@@ -1,7 +1,7 @@
-#include "Dynamic.h"
+#include "Time.h"
 
 // report measured key press times to serial?
-#define DEBUG_TIMES
+//#define DEBUG_TIMES
 
 // report maximum duration of 1 scanMatrix() call
 #define DEBUG_SCAN_TIME
@@ -11,11 +11,11 @@ keyboard scanned by diode matrix
 */
 
 /**
- * Called if a state change is detected by the matrix scanner.
+ * Called if a state change (key pressed down or released) is detected by the matrix scanner.
  * @param key 0 = most left key, normally an A (88 keys) 
- * @param on true if the key has been pressed, else it has been released
+ * @param time measured time for key pressure in units of 128 microseconds, less than 0 for a released key
  */
-void handleKeyEvent(int key, byte velocity);
+void handleKeyEvent(int key, int time);
 
 const int n_columns = 8; // neighbour keys belong to different columns
 const int n_rows = 11; // 8 * 11= 88 keys
@@ -99,63 +99,9 @@ void setupMatrixPins() {
   }
 }
 
-int max_scan_time_ms;
+int max_scan_time_us;
 
-//#define PORTABLE_IO
-#ifdef PORTABLE_IO
-
-/**
- * To be called in loop.
- * Calls handleKeyEvent().
- */
-void scanMatrix() {
-  #ifdef DEBUG_SCAN_TIME
-  int t_start = millis();
-  #endif
-  for (int row = 0; row < n_rows; row++) {
-    digitalWrite(row_pins[row], LOW);
-    for (int column = 0; column < n_columns; column++) {
-      digitalWrite(column_pins[column], HIGH);
-      int index = column + row * n_columns;
-      long & state = key_states[index]; 
-      // normally closed contact triggers start of time measurement and key-off
-      int value = digitalRead(nc_row_pins[row]);
-      if (value == HIGH) {
-        if (state < 0) {
-          handleKeyEvent(index, 0);
-        }
-        state = 0;
-      } else {
-        if (state == 0) {
-          // start of key-down
-          state = _128_micros(); // now state > 0
-        }
-      }
-      // normally open contact triggers key-on
-      value = digitalRead(no_row_pins[row]);
-      if (value == HIGH && state > 0) {
-        int t = _128_micros() - state;
-        if (t >= t_max)
-          t = t_max - 1;
-        handleKeyEvent(index, velocities[t]);
-        state = -1;
-      }
-      digitalWrite(column_pins[column], LOW);
-    }
-    digitalWrite(row_pins[row], HIGH);    
-  }
-  #ifdef DEBUG_SCAN_TIME
-  int scan_time_ms = millis() - t_start;
-  if (scan_time_ms > max_scan_time_ms) {
-    max_scan_time_ms = scan_time_ms;
-    Serial.print(max_scan_time_ms); Serial.println(" ms max. scan time");
-    // highest observed value: 4 ms
-  }
-  #endif
-}
-
-#else
-// This variant uses direct port manipulation and is around twice as fast as the method above.
+// This procedure uses direct port manipulation and is around twice as fast as with digitalRead/Write.
 // http://harperjiangnew.blogspot.de/2013/05/arduino-port-manipulation-on-mega-2560.html
 
 /** 
@@ -163,14 +109,11 @@ void scanMatrix() {
  * Calls handleKeyEvent().
  */
 void scanMatrix() {
-  #ifdef DEBUG_TIMES
-  static unsigned long n = 0;
-  n++;
-  #endif
   #ifdef DEBUG_SCAN_TIME
-  int t_start = millis();
+  unsigned long t_start = micros();
   #endif
   for (int row = 0; row < n_rows; row++) {
+    //digitalWrite(row_pins[row], LOW);
     switch (row) {
       case 0:  PORTL ^= (1<<4); break;
       case 1:  PORTD ^= (1<<7); break;
@@ -185,6 +128,7 @@ void scanMatrix() {
       case 10: PORTA ^= (1<<4); break;
     }
     for (int column = 0; column < n_columns; column++) {
+      //digitalWrite(column_pins[column], HIGH);
       switch (column) {
         case 0: PORTH |= (1<<3); break;
         case 1: PORTH |= (1<<4); break;
@@ -198,6 +142,7 @@ void scanMatrix() {
       int index = column + row * n_columns;
       long & state = key_states[index]; 
       // normally closed contact triggers start of time measurement and key-off
+      //int value = digitalRead(nc_row_pins[row]);
       int value;
       switch (row) {
         case 0:  value = PINL & (1<<6); break;
@@ -214,7 +159,7 @@ void scanMatrix() {
       }
       if (value != 0) {
         if (state < 0) {
-          handleKeyEvent(index, 0);
+          handleKeyEvent(index, -1);
         }
         state = 0;
       } else {
@@ -224,6 +169,7 @@ void scanMatrix() {
         }
       }
       // normally open contact triggers key-on
+      //value = digitalRead(no_row_pins[row]);
       switch (row) {
         case 0:  value = PINL & (1<<2); break;
         case 1:  value = PINC & (1<<1); break;
@@ -239,16 +185,10 @@ void scanMatrix() {
       }
       if (value != 0 && state > 0) {
         int t = _128_micros() - state;
-        if (t >= t_max)
-          t = t_max - 1;
-        handleKeyEvent(index, velocities[t]);
+        handleKeyEvent(index, t);
         state = -1;
-        #ifdef DEBUG_TIMES
-        Serial.print(t); 
-        Serial.print(" * 0.128 ms -> "); 
-        Serial.println(velocities[t]); 
-        #endif
       }
+      //digitalWrite(column_pins[column], LOW);
       switch (column) {
         case 0: PORTH ^= (1<<3); break;
         case 1: PORTH ^= (1<<4); break;
@@ -260,6 +200,7 @@ void scanMatrix() {
         case 7: PORTB ^= (1<<7); break;
       }
     }
+    //digitalWrite(row_pins[row], HIGH);    
     switch (row) {
       case 0:  PORTL |= (1<<4); break;
       case 1:  PORTD |= (1<<7); break;
@@ -275,16 +216,15 @@ void scanMatrix() {
     }
   }
   #ifdef DEBUG_SCAN_TIME
-  int scan_time_ms = millis() - t_start;
-  if (scan_time_ms > max_scan_time_ms) {
-    max_scan_time_ms = scan_time_ms;
-    Serial.print(max_scan_time_ms); Serial.println(" ms max. scan time");
+  unsigned long scan_time_us = micros() - t_start;
+  if (scan_time_us > max_scan_time_us) {
+    max_scan_time_us = scan_time_us;
+    Serial.print(max_scan_time_us); Serial.println(" microseconds max. scan time");
     // highest observed value: 2 ms
   }
   #endif
 }
 
-#endif
  
 
 

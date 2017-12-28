@@ -5,8 +5,9 @@ const byte MIDI_CONTROLLER_MEAN = 64;
 
 /*--------------------------------- persistent settings ---------------------------------*/
 
-const byte meter_max = 255; // = 3*5*17 = possible deltas
-const byte meter_delta = 17;
+const byte meter_max = 255; // = 3*5*17 -> possible deltas
+const byte meter_delta = 5;
+const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
 
 
 // the values in a fresh EEPROM
@@ -45,15 +46,18 @@ void readSettings() {
   byte *b = (byte*)&settings;
   for (int i = 0; i < sizeof(Settings); i++)
     b[i] = EEPROM.read(SettingsAddress + i);
-  if (settings.output_channel > 15) {
+  if (true || settings.output_channel > 15) {
     // very first read 
+    Serial.println("Starting with default settings!");
+    Serial.print("All sensitivities will be "); Serial.println(meter_mean);
     settings.output_channel = 0; // 1st MIDI channel
-    int mean_value = (meter_max / (meter_delta*2)) * meter_delta;
-    settings.sensitivity = mean_value;
+    settings.sensitivity = meter_mean;
     for (int i = 0; i < n_keys; i++) {
-      settings.sensitivities[i] = mean_value;
+      settings.sensitivities[i] = meter_mean;
     }
   }
+  Serial.print("Output channel "); Serial.println(settings.output_channel);
+  Serial.print("Global sensitivity "); Serial.println(settings.sensitivity);
 }
 
 /**
@@ -63,8 +67,10 @@ void saveSettings() {
   byte *b = (byte*)&settings;
   for (int i = 0; i < sizeof(Settings); i++) {
     byte original = EEPROM.read(SettingsAddress + i);
-    if (original != b[i])
+    if (original != b[i]) {
       EEPROM.write(SettingsAddress + i, b[i]);
+      Serial.print("EEPROM ["); Serial.print(i); Serial.print("] <- "); Serial.println(b[i]);
+    }
   }
 }
 

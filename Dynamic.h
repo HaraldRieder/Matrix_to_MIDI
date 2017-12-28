@@ -1,4 +1,3 @@
-#include "Time.h"
 /*
 Calc. MIDI velocity proportional to velocity of pressed key:
 
@@ -20,9 +19,9 @@ Very fast key pressure: 3 ms
 Playing pianissimo: ~ 100 ms 
 */
 
-int t_127 = 30; // * 128 us  
-
+const int t_127 = 30; // * 128 us  
 const int t_max = 2000; // * 128 us = 256 ms, from t_max on all velocities are minimal and constant  
+
 byte velocities[t_max];
 
 void initVelocities() {

@@ -6,6 +6,7 @@
 
 #include <EEPROM.h>
 #include "Matrix.h"
+#include "Dynamic.h"
 #include "Matrix_to_MIDI.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
@@ -59,26 +60,15 @@ void setup() {
 long max_ex_scan_time_us = 0;
 int t_start = -1;
 
-// report the max. time the Arduino needs per loop, highest observed value: 2 ms
+// report the max. time between calls of scanMatrix, highest observed value: 24 us
 #define DEBUG_EX_SCAN_TIME
 
 void loop() {
   // call this often
   //midi1.read();
 
-  switch (slice_counter) {
-    case 0:
-      rockerSwitch();
-      break;
-    case 1:  
-    case 2:  
-    case 3:  
-    case 4:  
-    case 5:  
-    case 6:
-      // reserved
-      break;
-  }
+  rockerSwitch();
+  
   #ifdef DEBUG_EX_SCAN_TIME
   if (t_start > 0) {
     int ex_scan_time_us = micros() - t_start;
@@ -88,14 +78,12 @@ void loop() {
     }
   }
   #endif
+  
   scanMatrix();
+  
   #ifdef DEBUG_EX_SCAN_TIME
   t_start = micros();
   #endif
-  
-  slice_counter++;
-  if (slice_counter >= n_slices)
-    slice_counter = 0;
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
@@ -232,10 +220,21 @@ void rockerSwitch() {
 const midi::DataByte A = 21;
 const midi::DataByte DefaultVelocity = 80;
 
-void handleKeyEvent(int key, byte velocity) {
+// report calculated MIDI velocity
+#define DEBUG_VELOCITY
+
+void handleKeyEvent(int key, int t) {
     midi::DataByte note = (midi::DataByte)(key + A);
-    if (velocity) { 
-      midi1.sendNoteOn(note, velocity, channel);
+    if (t >= 0) { 
+      t = t - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
+      if (t >= t_max)
+        t = t_max - 1;
+      else if (t < 0)
+        t = 0;
+      midi1.sendNoteOn(note, velocities[t], channel);
+      #ifdef DEBUG_VELOCITY
+      Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
+      #endif
       if (state == key_sensitivity) {
         process(note_on, key);
       }
