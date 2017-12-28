@@ -95,7 +95,7 @@ State state = idle;
  * @param event user action
  * @value optional value, meaning depends on event type
  */
-void process(Event event, int value) {
+void process(Event event, int value, int value2) {
 
   switch (state) {
 
@@ -118,6 +118,14 @@ void process(Event event, int value) {
       
     case global_sensitivity:
       switch (event) {
+        case note_on:
+          // display calculated MIDI velocity value
+          analogWrite(meter_pin, value2 << 1);
+          break;
+        case note_off:
+          // display global sensitivity 
+          analogWrite(meter_pin, settings.sensitivity);
+          break;
         case up_short:
           if (settings.sensitivity < meter_max) {
             settings.sensitivity += meter_delta;
@@ -145,10 +153,13 @@ void process(Event event, int value) {
       switch (event) {
         case note_on:
           last_key = value;
-          analogWrite(meter_pin, settings.sensitivities[last_key]);
+          // display calculated MIDI velocity value
+          analogWrite(meter_pin, value2 << 1);
           digitalWrite(led_pin, HIGH);
           break;
         case note_off:
+          // display sensitivity of last key
+          analogWrite(meter_pin, settings.sensitivities[last_key]);
           digitalWrite(led_pin, LOW);
           break;
         case up_short:
@@ -197,7 +208,7 @@ void rockerSwitch() {
   else if (rocker_switch_1) {
     // falling edge
     rocker_switch_1 = false;
-    process(millis() > last_switch_time + long_time ? up_long : up_short, -1);
+    process(millis() > last_switch_time + long_time ? up_long : up_short, -1, -1);
   }
   //val = digitalRead(rocker_switch_2_pin);
   val = PINA & 0b10;
@@ -210,7 +221,7 @@ void rockerSwitch() {
   else if (rocker_switch_2) {
     // falling edge
     rocker_switch_2 = false;
-    process(millis() > last_switch_time + long_time ? down_long : down_short, -1);
+    process(millis() > last_switch_time + long_time ? down_long : down_short, -1, -1);
   }
 }
 
@@ -221,7 +232,7 @@ const midi::DataByte A = 21;
 const midi::DataByte DefaultVelocity = 80;
 
 // report calculated MIDI velocity
-#define DEBUG_VELOCITY
+//#define DEBUG_VELOCITY
 
 void handleKeyEvent(int key, int t) {
     midi::DataByte note = (midi::DataByte)(key + A);
@@ -235,14 +246,14 @@ void handleKeyEvent(int key, int t) {
       #ifdef DEBUG_VELOCITY
       Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
       #endif
-      if (state == key_sensitivity) {
-        process(note_on, key);
+      if (state != idle) {
+        process(note_on, key, velocities[t]);
       }
     }
     else {
       midi1.sendNoteOff(note, DefaultVelocity, channel);
-      if (state == key_sensitivity) {
-        process(note_off, key);
+      if (state != idle) {
+        process(note_off, key, DefaultVelocity);
       }
     }
 }

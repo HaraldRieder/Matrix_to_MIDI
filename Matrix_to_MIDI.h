@@ -46,7 +46,7 @@ void readSettings() {
   byte *b = (byte*)&settings;
   for (int i = 0; i < sizeof(Settings); i++)
     b[i] = EEPROM.read(SettingsAddress + i);
-  if (true || settings.output_channel > 15) {
+  if (/*true ||*/ settings.output_channel > 15) {
     // very first read 
     Serial.println("Starting with default settings!");
     Serial.print("All sensitivities will be "); Serial.println(meter_mean);
