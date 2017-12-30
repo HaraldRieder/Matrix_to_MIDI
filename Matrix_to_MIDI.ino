@@ -8,6 +8,7 @@
 #include "Matrix.h"
 #include "Dynamic.h"
 #include "Matrix_to_MIDI.h"
+#include "ScaleTune.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
