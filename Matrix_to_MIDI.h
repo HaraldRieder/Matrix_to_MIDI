@@ -3,12 +3,30 @@ const byte MIDI_CONTROLLER_MAX = 127;
 const byte MIDI_CONTROLLER_MEAN = 64;
 
 
-/*--------------------------------- persistent settings ---------------------------------*/
-
+const int meter_pin = 2;
+const int meter_led_pin = A3;
 const byte meter_max = 255; // = 3*5*17 -> possible deltas
 const byte meter_delta = 5;
 const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
 
+/**
+ * Considers that the meter is mounted upside down in the case.
+ * @value to be displayed
+ */
+void display(int value) {
+  Serial.print("display "); Serial.println(value);
+  analogWrite(meter_pin, meter_max - value);
+}
+
+/**
+ * Channel 1 -> pointer is on the left.
+ * Channel 10 -> pointer is on the right.
+ */
+void displayChannel(midi::Channel ch) {
+  display((ch - 1) * meter_max / 9);
+}
+
+/*--------------------------------- persistent settings ---------------------------------*/
 
 // the values in a fresh EEPROM
 const byte invalid = 0xff;
@@ -21,7 +39,7 @@ typedef byte Sensitivities[n_keys];
 Sensitivities sensitivities;
 
 struct Settings {
-  byte output_channel;
+  byte init;
   byte sensitivity;
   byte reserved2;
   byte reserved3;
@@ -46,17 +64,16 @@ void readSettings() {
   byte *b = (byte*)&settings;
   for (int i = 0; i < sizeof(Settings); i++)
     b[i] = EEPROM.read(SettingsAddress + i);
-  if (/*true ||*/ settings.output_channel > 15) {
+  if (/*true ||*/ settings.init > 15) {
     // very first read 
     Serial.println("Starting with default settings!");
     Serial.print("All sensitivities will be "); Serial.println(meter_mean);
-    settings.output_channel = 0; // 1st MIDI channel
+    settings.init = 0; 
     settings.sensitivity = meter_mean;
     for (int i = 0; i < n_keys; i++) {
       settings.sensitivities[i] = meter_mean;
     }
   }
-  Serial.print("Output channel "); Serial.println(settings.output_channel);
   Serial.print("Global sensitivity "); Serial.println(settings.sensitivity);
 }
 
@@ -77,8 +94,8 @@ void saveSettings() {
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-enum State { idle, global_sensitivity, key_sensitivity};
-enum Event { up_long, down_long, up_short, down_short, note_on, note_off };
+enum State { idle, global_sensitivity, key_sensitivity, wait_for_split};
+enum Event { up_long, down_long, up_short, down_short, note_on, note_off, toggle_led };
 
 void process(Event event, int value);
 

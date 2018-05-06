@@ -9,6 +9,7 @@
 #include "Dynamic.h"
 #include "Matrix_to_MIDI.h"
 #include "ScaleTune.h"
+#include "CodingSwitch.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
@@ -19,25 +20,46 @@ midi::Channel channel = 1;
 int slice_counter = 0;
 const int n_slices = 7;
 
-const int led_pin = A3;
+const int keyboard_led_pin = A2;
 
-const int meter_pin = 2;
 const int no_key = -1;
 int last_key = no_key;
+int split_position = no_key;
 
-const int rocker_switch_1_pin = 22; // A0
-const int rocker_switch_2_pin = 23; // A1
-boolean rocker_switch_1 = false;
-boolean rocker_switch_2 = false;
+const int black_button_pin = 22;
+const int green_button_pin = 23;
+const int external_switch_pin = A0;
+boolean black_button = false;
+boolean green_button = false;
+int external_switch = LOW;
 
 void setup() {
   Serial.begin(9600); // debugging
-  pinMode(rocker_switch_1_pin, INPUT_PULLUP);
-  pinMode(rocker_switch_2_pin, INPUT_PULLUP);
+  pinMode(black_button_pin, INPUT_PULLUP);
+  pinMode(green_button_pin, INPUT_PULLUP);
+  pinMode(external_switch, INPUT_PULLUP);
   pinMode(meter_pin, OUTPUT);
-  analogWrite(meter_pin, 0);
-  pinMode(led_pin, OUTPUT);
-  digitalWrite(led_pin, HIGH);
+  display(0);
+  pinMode(meter_led_pin, OUTPUT);
+  digitalWrite(meter_led_pin, HIGH);
+  pinMode(keyboard_led_pin, OUTPUT);
+  digitalWrite(keyboard_led_pin, LOW);
+  
+  // user has 2.5 seconds (re-triggerable timer) to adjust MIDI channel
+  digitalWrite(meter_led_pin, LOW);
+  channel = readCodingSwitchValue(A1) + 1; // 0=omni, 1..16 are individual channels, 17=off
+  displayChannel(channel);
+  for (int i = 1; i <= 20; i++) {
+    delay(250);
+    int newChannel = readCodingSwitchValue(A1) + 1;
+    displayChannel(newChannel);
+    if (newChannel != channel) {
+      channel = newChannel;
+      i = 0;
+    }
+  } 
+  digitalWrite(meter_led_pin, HIGH);
+  analogWrite(meter_pin, meter_max);
   
   setupMatrixPins();
 
@@ -58,17 +80,33 @@ void setup() {
 }
 
 // max. time Arduino consumes between 2 calls of loop()
-long max_ex_scan_time_us = 0;
+int max_ex_scan_time_us = 0;
 int t_start = -1;
+
+// blinking LEDs
+const int period = 400/*ms*/;
+unsigned long last_blink = 0/*ms*/;
 
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
 #define DEBUG_EX_SCAN_TIME
 
+State state = idle;
+
 void loop() {
   // call this often
   //midi1.read();
-
-  rockerSwitch();
+  unsigned long t = millis();
+  
+  if (state != idle) {
+    if (t >= last_blink + period) {
+      last_blink = t;
+      process(toggle_led, -1, -1);
+    }    
+  }
+  
+  if (!externalSwitch()) {
+    buttons(t);
+  }
   
   #ifdef DEBUG_EX_SCAN_TIME
   if (t_start > 0) {
@@ -89,30 +127,60 @@ void loop() {
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-State state = idle;
-
+#define DEBUG_STATE_MACHINE
 /**
  * The state event machine for the user interface.
  * @param event user action
  * @value optional value, meaning depends on event type
  */
 void process(Event event, int value, int value2) {
+  
+  #ifdef DEBUG_STATE_MACHINE
+  Serial.print(state); Serial.print(" <- "); Serial.print(event);
+  #endif
 
   switch (state) {
 
     case idle:
       switch (event) {
         case up_long:
-          digitalWrite(led_pin, LOW);
+          digitalWrite(meter_led_pin, LOW);
           state = global_sensitivity;
           last_key = no_key;
-          analogWrite(meter_pin, settings.sensitivity);
+          display(settings.sensitivity);
           return;
         case down_long:
-          digitalWrite(led_pin, LOW);
+          digitalWrite(meter_led_pin, LOW);
           state = key_sensitivity;
           last_key = no_key;
-          analogWrite(meter_pin, meter_max);
+          display(meter_max);
+          return;
+        case up_short: 
+        case down_short:
+          if (black_button && green_button) {
+            if (split_position == no_key) {
+              state = wait_for_split;
+            }
+            else {
+              // back to normal mode (no split)
+              digitalWrite(keyboard_led_pin, LOW);
+              state = idle;
+            }
+            split_position = no_key;
+          }
+          return;
+      }
+      return;
+      
+    case wait_for_split:
+      switch (event) {
+        case note_on: 
+          split_position = value;
+          state = idle;
+          digitalWrite(keyboard_led_pin, HIGH);
+          return;
+        case toggle_led:
+          digitalWrite(keyboard_led_pin, digitalRead(keyboard_led_pin) == HIGH ? LOW : HIGH);
           return;
       }
       return;
@@ -121,31 +189,31 @@ void process(Event event, int value, int value2) {
       switch (event) {
         case note_on:
           // display calculated MIDI velocity value
-          analogWrite(meter_pin, value2 << 1);
+          display(value2 << 1);
           break;
         case note_off:
           // display global sensitivity 
-          analogWrite(meter_pin, settings.sensitivity);
+          display(settings.sensitivity);
           break;
         case up_short:
           if (settings.sensitivity < meter_max) {
             settings.sensitivity += meter_delta;
           }
-          analogWrite(meter_pin, settings.sensitivity);
+          display(settings.sensitivity);
           return;
         case down_short:
           if (settings.sensitivity > 0) {
             settings.sensitivity -= meter_delta;
           }
-          analogWrite(meter_pin, settings.sensitivity);
+          display(settings.sensitivity);
           return;
         case up_long:
         case down_long:
           // exit
           state = idle;
           saveSettings();
-          analogWrite(meter_pin, 0);
-          digitalWrite(led_pin, HIGH);
+          display(0);
+          digitalWrite(meter_led_pin, HIGH);
           return;
       }
       return;
@@ -155,20 +223,20 @@ void process(Event event, int value, int value2) {
         case note_on:
           last_key = value;
           // display calculated MIDI velocity value
-          analogWrite(meter_pin, value2 << 1);
-          digitalWrite(led_pin, HIGH);
+          display(value2 << 1);
+          digitalWrite(meter_led_pin, HIGH);
           break;
         case note_off:
           // display sensitivity of last key
-          analogWrite(meter_pin, settings.sensitivities[last_key]);
-          digitalWrite(led_pin, LOW);
+          display(settings.sensitivities[last_key]);
+          digitalWrite(meter_led_pin, LOW);
           break;
         case up_short:
           if (last_key != no_key) {
             if (settings.sensitivities[last_key] < meter_max) {
               settings.sensitivities[last_key] += meter_delta;
             }
-            analogWrite(meter_pin, settings.sensitivities[last_key]);
+            display(settings.sensitivities[last_key]);
           }
           return;
         case down_short:
@@ -176,7 +244,7 @@ void process(Event event, int value, int value2) {
             if (settings.sensitivities[last_key] > 0) {
               settings.sensitivities[last_key] -= meter_delta;
             }
-            analogWrite(meter_pin, settings.sensitivities[last_key]);
+            display(settings.sensitivities[last_key]);
           }
           return;
         case up_long:
@@ -184,46 +252,87 @@ void process(Event event, int value, int value2) {
           // exit
           state = idle;
           saveSettings();
-          analogWrite(meter_pin, 0);
-          digitalWrite(led_pin, HIGH);
+          display(0);
+          digitalWrite(meter_led_pin, HIGH);
+          return;
+        case toggle_led:
+          digitalWrite(meter_led_pin, digitalRead(meter_led_pin) == HIGH ? LOW : HIGH);
           return;
       }
       return;
   }  
 }
 
-/*--------------------------------- rocker switch ---------------------------------*/
+/*--------------------------------- push-buttons ---------------------------------*/
 
 unsigned long last_switch_time;
 const unsigned long long_time = 2500; 
 
-void rockerSwitch() {
+void buttons(unsigned long t_millis) {
   //int val = digitalRead(rocker_switch_1_pin);
   int val = PINA & 0b01;
   if (val == 0) {
-    if (!rocker_switch_1) {
-      rocker_switch_1 = true;
-      last_switch_time = millis();
+    if (!black_button) {
+      black_button = true;
+      last_switch_time = t_millis;
+    }
+    else {
+      if (t_millis >= last_switch_time + long_time) {
+        process(up_long, -1, -1);
+      }
     }
   }
-  else if (rocker_switch_1) {
+  else if (black_button) {
     // falling edge
-    rocker_switch_1 = false;
-    process(millis() > last_switch_time + long_time ? up_long : up_short, -1, -1);
+    black_button = false;
+    if (t_millis <= last_switch_time + long_time) {
+      process(up_short, -1, -1);
+    }
   }
   //val = digitalRead(rocker_switch_2_pin);
   val = PINA & 0b10;
   if (val == 0) {
-    if (!rocker_switch_2) {
-      rocker_switch_2 = true;
-      last_switch_time = millis();
+    if (!green_button) {
+      green_button = true;
+      last_switch_time = t_millis;
+    }
+    else {
+      if (t_millis >= last_switch_time + long_time) {
+        process(down_long, -1, -1);
+      }
     }
   }
-  else if (rocker_switch_2) {
+  else if (green_button) {
     // falling edge
-    rocker_switch_2 = false;
-    process(millis() > last_switch_time + long_time ? down_long : down_short, -1, -1);
+    green_button = false;
+    if (t_millis <= last_switch_time + long_time) {
+      process(down_short, -1, -1);
+    }
   }
+}
+
+/*--------------------------------- ext. switch ---------------------------------*/
+#define DEBUG_SUSTAIN
+/**
+ * Reads external switch value and sends MIDI sustain control change if necessary.
+ * @return true on value change
+ */
+bool externalSwitch() {
+  int val = digitalRead(external_switch_pin);
+  if (val == external_switch) {
+    // no change
+    return false;
+  }
+  midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+  #ifdef DEBUG_SUSTAIN
+  if (external_switch) {
+    Serial.println("sustain on");
+  }
+  else {
+    Serial.println("sustain off");
+  }    
+  #endif
+  return true;
 }
 
 /*--------------------------------- event from matrix ---------------------------------*/
@@ -237,13 +346,15 @@ const midi::DataByte DefaultVelocity = 80;
 
 void handleKeyEvent(int key, int t) {
     midi::DataByte note = (midi::DataByte)(key + A);
+    int chan = key < split_position ? channel + 1 : channel;
+    chan &= 0xf;
     if (t >= 0) { 
       t = t - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
       if (t >= t_max)
         t = t_max - 1;
       else if (t < 0)
         t = 0;
-      midi1.sendNoteOn(note, velocities[t], channel);
+      midi1.sendNoteOn(note, velocities[t], chan);
       #ifdef DEBUG_VELOCITY
       Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
       #endif
@@ -252,7 +363,7 @@ void handleKeyEvent(int key, int t) {
       }
     }
     else {
-      midi1.sendNoteOff(note, DefaultVelocity, channel);
+      midi1.sendNoteOff(note, DefaultVelocity, chan);
       if (state != idle) {
         process(note_off, key, DefaultVelocity);
       }
