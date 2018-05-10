@@ -4,7 +4,7 @@
 //#define DEBUG_TIMES
 
 // report maximum duration of 1 scanMatrix() call
-#define DEBUG_SCAN_TIME
+//#define DEBUG_SCAN_TIME
 
 /* 
 keyboard scanned by diode matrix

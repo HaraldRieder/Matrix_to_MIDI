@@ -37,13 +37,13 @@ void setup() {
   Serial.begin(9600); // debugging
   pinMode(black_button_pin, INPUT_PULLUP);
   pinMode(green_button_pin, INPUT_PULLUP);
-  pinMode(external_switch, INPUT_PULLUP);
+  pinMode(external_switch_pin, INPUT_PULLUP);
   pinMode(meter_pin, OUTPUT);
   display(0);
   pinMode(meter_led_pin, OUTPUT);
   digitalWrite(meter_led_pin, HIGH);
   pinMode(keyboard_led_pin, OUTPUT);
-  digitalWrite(keyboard_led_pin, LOW);
+  digitalWrite(keyboard_led_pin, HIGH);
   
   // user has 2.5 seconds (re-triggerable timer) to adjust MIDI channel
   digitalWrite(meter_led_pin, LOW);
@@ -86,9 +86,10 @@ int t_start = -1;
 // blinking LEDs
 const int period = 400/*ms*/;
 unsigned long last_blink = 0/*ms*/;
+boolean keyboard_led_on;
 
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
-#define DEBUG_EX_SCAN_TIME
+//#define DEBUG_EX_SCAN_TIME
 
 State state = idle;
 
@@ -97,11 +98,15 @@ void loop() {
   //midi1.read();
   unsigned long t = millis();
   
-  if (state != idle) {
-    if (t >= last_blink + period) {
-      last_blink = t;
+  switch (state) {
+    case idle: case global_sensitivity:
       process(toggle_led, -1, -1);
-    }    
+      break;
+    default:      
+      if (t >= last_blink + period) {
+        last_blink = t;
+        process(toggle_led, -1, -1);
+      }
   }
   
   if (!externalSwitch()) {
@@ -136,8 +141,29 @@ void loop() {
 void process(Event event, int value, int value2) {
   
   #ifdef DEBUG_STATE_MACHINE
-  Serial.print(state); Serial.print(" <- "); Serial.print(event);
+  switch (state) {
+    case idle:               Serial.print("idle");           break;
+    case wait_for_split:     Serial.print("wait for split"); break;
+    case global_sensitivity: Serial.print("global sens.");   break;
+    case key_sensitivity:    Serial.print("key sens.");      break;
+  }
+  Serial.print(" <- "); 
+  switch (event) {
+    case up_long:    Serial.println("up long");    break;
+    case down_long:  Serial.println("down long");  break;
+    case up_short:   Serial.println("up short");   break;
+    case down_short: Serial.println("down short"); break;
+    case note_on:    Serial.println("note on");    break;
+    case note_off:   Serial.println("note off");   break;
+    case toggle_led: Serial.println("toggle led"); break;
+  }
+  delay(150);
   #endif
+  
+  if (event == toggle_led) {
+    digitalWrite(keyboard_led_pin, (keyboard_led_on = !keyboard_led_on) ? LOW : HIGH);
+    return;
+  }
 
   switch (state) {
 
@@ -157,13 +183,14 @@ void process(Event event, int value, int value2) {
           return;
         case up_short: 
         case down_short:
-          if (black_button && green_button) {
+          if (black_button || green_button) {
+            // after falling edge still another button pressed, 
+            // both must have been pressed together
             if (split_position == no_key) {
               state = wait_for_split;
             }
             else {
               // back to normal mode (no split)
-              digitalWrite(keyboard_led_pin, LOW);
               state = idle;
             }
             split_position = no_key;
@@ -177,10 +204,16 @@ void process(Event event, int value, int value2) {
         case note_on: 
           split_position = value;
           state = idle;
-          digitalWrite(keyboard_led_pin, HIGH);
           return;
-        case toggle_led:
-          digitalWrite(keyboard_led_pin, digitalRead(keyboard_led_pin) == HIGH ? LOW : HIGH);
+        case up_short: 
+        case down_short:
+          if (black_button || green_button) {
+            // after falling edge still another button pressed, 
+            // both must have been pressed together
+            // back to normal mode (no split)
+            state = idle;
+            split_position = no_key;
+          }
           return;
       }
       return;
@@ -255,9 +288,6 @@ void process(Event event, int value, int value2) {
           display(0);
           digitalWrite(meter_led_pin, HIGH);
           return;
-        case toggle_led:
-          digitalWrite(meter_led_pin, digitalRead(meter_led_pin) == HIGH ? LOW : HIGH);
-          return;
       }
       return;
   }  
@@ -269,6 +299,8 @@ unsigned long last_switch_time;
 const unsigned long long_time = 2500; 
 
 void buttons(unsigned long t_millis) {
+  static boolean discard_next_short = false;
+  
   //int val = digitalRead(rocker_switch_1_pin);
   int val = PINA & 0b01;
   if (val == 0) {
@@ -279,13 +311,18 @@ void buttons(unsigned long t_millis) {
     else {
       if (t_millis >= last_switch_time + long_time) {
         process(up_long, -1, -1);
+        last_switch_time = t_millis;
+        discard_next_short = true;
       }
     }
   }
   else if (black_button) {
     // falling edge
     black_button = false;
-    if (t_millis <= last_switch_time + long_time) {
+    if (discard_next_short) {
+      discard_next_short = false;
+    }
+    else if (t_millis <= last_switch_time + long_time) {
       process(up_short, -1, -1);
     }
   }
@@ -299,20 +336,25 @@ void buttons(unsigned long t_millis) {
     else {
       if (t_millis >= last_switch_time + long_time) {
         process(down_long, -1, -1);
+        last_switch_time = t_millis;
+        discard_next_short = true;
       }
     }
   }
   else if (green_button) {
     // falling edge
     green_button = false;
-    if (t_millis <= last_switch_time + long_time) {
+    if (discard_next_short) {
+      discard_next_short = false;
+    }
+    else if (t_millis <= last_switch_time + long_time) {
       process(down_short, -1, -1);
     }
   }
 }
 
 /*--------------------------------- ext. switch ---------------------------------*/
-#define DEBUG_SUSTAIN
+//#define DEBUG_SUSTAIN
 /**
  * Reads external switch value and sends MIDI sustain control change if necessary.
  * @return true on value change

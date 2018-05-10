@@ -14,7 +14,6 @@ const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
  * @value to be displayed
  */
 void display(int value) {
-  Serial.print("display "); Serial.println(value);
   analogWrite(meter_pin, meter_max - value);
 }
 
@@ -54,6 +53,34 @@ struct Settings {
 
 Settings settings;
 
+void printSettings() {
+  Serial.print("Global sensitivity "); Serial.println(settings.sensitivity);
+  byte min_key_sens = 255; 
+  byte max_key_sens = 0; 
+  // find min. and max.
+  for (int i = 0; i < n_keys; i++) {
+    byte sens = settings.sensitivities[i];
+    if (sens > max_key_sens)
+      max_key_sens = sens;
+    if (sens < min_key_sens)
+      min_key_sens = sens;
+  }
+  // print
+  for (int i = 0; i < n_keys; i++) {
+    int sens = settings.sensitivities[i];
+    Serial.print("Sensitivity ");
+    Serial.print(i);
+    if (sens == max_key_sens) {
+      Serial.print(" MAX ");
+    } else if (sens == min_key_sens) {
+      Serial.print(" min ");
+    } else {
+      Serial.print(" ");
+    }
+    Serial.println(sens);
+  }
+}
+
 /**
  * Reads settings from EEPROM.
  * When the EEPROM still contains 0xff defaults,
@@ -74,7 +101,7 @@ void readSettings() {
       settings.sensitivities[i] = meter_mean;
     }
   }
-  Serial.print("Global sensitivity "); Serial.println(settings.sensitivity);
+  printSettings();
 }
 
 /**

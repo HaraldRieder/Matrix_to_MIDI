@@ -7,7 +7,7 @@ const int n_values = 10;
 const int values[n_values] = {0,510,311,602,173,558,401,636,90,534};
 const int delta = 10;
 
-#define DEBUG_CODING_SWITCH
+//#define DEBUG_CODING_SWITCH
 
 /**
  * @return switch position as byte value 0..15
