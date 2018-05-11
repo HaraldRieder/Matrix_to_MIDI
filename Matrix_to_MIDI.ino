@@ -1,3 +1,8 @@
+/*
+TODOs
+- more direct I/O
+*/
+
 #include <midi_Message.h>
 #include <midi_Namespace.h>
 #include <MIDI.h>
@@ -86,7 +91,7 @@ int t_start = -1;
 // blinking LEDs
 const int period = 400/*ms*/;
 unsigned long last_blink = 0/*ms*/;
-boolean keyboard_led_on;
+boolean keyboard_led_on = false;
 
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
 //#define DEBUG_EX_SCAN_TIME
@@ -94,13 +99,26 @@ boolean keyboard_led_on;
 State state = idle;
 
 void loop() {
+  static int i_led;
   // call this often
   //midi1.read();
   unsigned long t = millis();
   
   switch (state) {
     case idle: case global_sensitivity:
-      process(toggle_led, -1, -1);
+      switch (++i_led) {
+        case 10:
+          digitalWrite(keyboard_led_pin, LOW);
+          keyboard_led_on = true;
+          break;
+        case 11:
+          if (split_position == no_key) {
+            digitalWrite(keyboard_led_pin, HIGH);
+            keyboard_led_on = false;
+          }
+          i_led = 0;
+          break;
+      }
       break;
     default:      
       if (t >= last_blink + period) {
@@ -132,7 +150,7 @@ void loop() {
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-#define DEBUG_STATE_MACHINE
+//#define DEBUG_STATE_MACHINE
 /**
  * The state event machine for the user interface.
  * @param event user action
@@ -204,6 +222,8 @@ void process(Event event, int value, int value2) {
         case note_on: 
           split_position = value;
           state = idle;
+          digitalWrite(keyboard_led_pin, HIGH); 
+          keyboard_led_on = true;
           return;
         case up_short: 
         case down_short:
