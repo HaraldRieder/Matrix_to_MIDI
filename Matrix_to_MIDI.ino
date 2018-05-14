@@ -1,8 +1,3 @@
-/*
-TODOs
-- more direct I/O
-*/
-
 #include <midi_Message.h>
 #include <midi_Namespace.h>
 #include <MIDI.h>
@@ -25,7 +20,7 @@ midi::Channel channel = 1;
 int slice_counter = 0;
 const int n_slices = 7;
 
-const int keyboard_led_pin = A2;
+const int keyboard_led_pin = A2; // = F2 ATMega port+bit
 
 const int no_key = -1;
 int last_key = no_key;
@@ -33,7 +28,7 @@ int split_position = no_key;
 
 const int black_button_pin = 22;
 const int green_button_pin = 23;
-const int external_switch_pin = A0;
+const int external_switch_pin = A0; // = F0 ATMega port+bit
 boolean black_button = false;
 boolean green_button = false;
 int external_switch = LOW;
@@ -68,8 +63,6 @@ void setup() {
   
   setupMatrixPins();
 
-  //ext_switch_1_val = digitalRead(ext_switch_1_pin);
-
   readSettings();
   initVelocities();
 
@@ -100,20 +93,23 @@ State state = idle;
 
 void loop() {
   static int i_led;
-  // call this often
-  //midi1.read();
+
+  scanMatrix();
+
   unsigned long t = millis();
   
   switch (state) {
     case idle: case global_sensitivity:
       switch (++i_led) {
         case 10:
-          digitalWrite(keyboard_led_pin, LOW);
+          //digitalWrite(keyboard_led_pin, LOW);
+          PORTF &= 0xfb;
           keyboard_led_on = true;
           break;
         case 11:
           if (split_position == no_key) {
-            digitalWrite(keyboard_led_pin, HIGH);
+            //digitalWrite(keyboard_led_pin, HIGH);
+            PORTF |= 0x04;
             keyboard_led_on = false;
           }
           i_led = 0;
@@ -179,7 +175,12 @@ void process(Event event, int value, int value2) {
   #endif
   
   if (event == toggle_led) {
-    digitalWrite(keyboard_led_pin, (keyboard_led_on = !keyboard_led_on) ? LOW : HIGH);
+    //digitalWrite(keyboard_led_pin, (keyboard_led_on = !keyboard_led_on) ? LOW : HIGH);
+    if (keyboard_led_on = !keyboard_led_on) {
+      PORTF &= 0xfb;
+    } else {
+      PORTF |= 0x04;
+    }
     return;
   }
 
@@ -222,7 +223,8 @@ void process(Event event, int value, int value2) {
         case note_on: 
           split_position = value;
           state = idle;
-          digitalWrite(keyboard_led_pin, HIGH); 
+          //digitalWrite(keyboard_led_pin, HIGH); 
+          PORTF |= 0x04;
           keyboard_led_on = true;
           return;
         case up_short: 
@@ -381,6 +383,7 @@ void buttons(unsigned long t_millis) {
  */
 bool externalSwitch() {
   int val = digitalRead(external_switch_pin);
+  //int val = (PINF & 0x01 == 0) ? LOW : HIGH;
   if (val == external_switch) {
     // no change
     return false;
