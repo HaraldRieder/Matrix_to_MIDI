@@ -7,7 +7,10 @@ const int meter_pin = 2;
 const int meter_led_pin = A3;
 const byte meter_max = 255; // = 3*5*17 -> possible deltas
 const byte meter_delta = 5;
-const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
+//const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
+// a cheap Conrad Elektronik meter of course is very non-linear, better measure the value
+// when the pointer is in the middle
+const byte meter_mean = 155;
 
 /**
  * Considers that the meter is mounted upside down in the case.
@@ -124,5 +127,5 @@ void saveSettings() {
 enum State { idle, global_sensitivity, key_sensitivity, wait_for_split};
 enum Event { up_long, down_long, up_short, down_short, note_on, note_off, toggle_led };
 
-void process(Event event, int value);
+void process(Event event, int value, int value2);
 

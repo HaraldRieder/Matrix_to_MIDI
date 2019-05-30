@@ -39,9 +39,7 @@ void setup() {
   pinMode(green_button_pin, INPUT_PULLUP);
   pinMode(external_switch_pin, INPUT_PULLUP);
   pinMode(meter_pin, OUTPUT);
-  display(0);
   pinMode(meter_led_pin, OUTPUT);
-  digitalWrite(meter_led_pin, HIGH);
   pinMode(keyboard_led_pin, OUTPUT);
   digitalWrite(keyboard_led_pin, HIGH);
   
@@ -59,7 +57,7 @@ void setup() {
     }
   } 
   digitalWrite(meter_led_pin, HIGH);
-  analogWrite(meter_pin, meter_max);
+  display(0);
   
   setupMatrixPins();
 
@@ -253,12 +251,14 @@ void process(Event event, int value, int value2) {
         case up_short:
           if (settings.sensitivity < meter_max) {
             settings.sensitivity += meter_delta;
+            Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
           display(settings.sensitivity);
           return;
         case down_short:
           if (settings.sensitivity > 0) {
             settings.sensitivity -= meter_delta;
+            Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
           display(settings.sensitivity);
           return;
@@ -290,6 +290,7 @@ void process(Event event, int value, int value2) {
           if (last_key != no_key) {
             if (settings.sensitivities[last_key] < meter_max) {
               settings.sensitivities[last_key] += meter_delta;
+              Serial.print("sens. "); Serial.println(settings.sensitivities[last_key]);
             }
             display(settings.sensitivities[last_key]);
           }
@@ -298,6 +299,7 @@ void process(Event event, int value, int value2) {
           if (last_key != no_key) {
             if (settings.sensitivities[last_key] > 0) {
               settings.sensitivities[last_key] -= meter_delta;
+              Serial.print("sens. "); Serial.println(settings.sensitivities[last_key]);
             }
             display(settings.sensitivities[last_key]);
           }
@@ -409,19 +411,20 @@ const midi::DataByte DefaultVelocity = 80;
 // report calculated MIDI velocity
 //#define DEBUG_VELOCITY
 
-void handleKeyEvent(int key, int t) {
+void handleKeyEvent(int key, int t_raw) {
     midi::DataByte note = (midi::DataByte)(key + A);
     int chan = key < split_position ? channel + 1 : channel;
     chan &= 0xf;
-    if (t >= 0) { 
-      t = t - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
+    if (t_raw >= 0) { 
+      int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
       if (t >= t_max)
         t = t_max - 1;
       else if (t < 0)
         t = 0;
       midi1.sendNoteOn(note, velocities[t], chan);
       #ifdef DEBUG_VELOCITY
-      Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
+      Serial.print("meter_mean: "); Serial.print(meter_mean); Serial.print(" ");
+      Serial.print(t_raw); Serial.print("->"); Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
       #endif
       if (state != idle) {
         process(note_on, key, velocities[t]);
