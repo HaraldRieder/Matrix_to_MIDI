@@ -218,7 +218,7 @@ void process(Event event, int value, int value2) {
       
     case wait_for_split:
       switch (event) {
-        case note_on: 
+        case note_off: 
           split_position = value;
           state = idle;
           //digitalWrite(keyboard_led_pin, HIGH); 
@@ -279,12 +279,10 @@ void process(Event event, int value, int value2) {
           last_key = value;
           // display calculated MIDI velocity value
           display(value2 << 1);
-          digitalWrite(meter_led_pin, HIGH);
           break;
         case note_off:
           // display sensitivity of last key
           display(settings.sensitivities[last_key]);
-          digitalWrite(meter_led_pin, LOW);
           break;
         case up_short:
           if (last_key != no_key) {
@@ -414,6 +412,7 @@ const midi::DataByte DefaultVelocity = 80;
 void handleKeyEvent(int key, int t_raw) {
     midi::DataByte note = (midi::DataByte)(key + A);
     int chan = key < split_position ? channel + 1 : channel;
+    note -= key >= split_position && split_position >= 12 ? 12 : 0;
     chan &= 0xf;
     if (t_raw >= 0) { 
       int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
