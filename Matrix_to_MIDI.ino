@@ -25,6 +25,7 @@ const int keyboard_led_pin = A2; // = F2 ATMega port+bit
 const int no_key = -1;
 int last_key = no_key;
 int split_position = no_key;
+int left_transpose = 0;
 
 const int black_button_pin = 22;
 const int green_button_pin = 23;
@@ -212,6 +213,21 @@ void process(Event event, int value, int value2) {
             }
             split_position = no_key;
           }
+          else if (split_position != no_key) {
+            // toggle left transpose
+            digitalWrite(meter_led_pin, LOW);
+            if (left_transpose == 0) {
+              left_transpose = 12;
+              display(meter_max);
+            } 
+            else {
+              left_transpose = 0;
+              display(0);
+            }
+            delay(1500);
+            digitalWrite(meter_led_pin, HIGH);
+            display(0);
+          }
           return;
       }
       return;
@@ -388,7 +404,14 @@ bool externalSwitch() {
     // no change
     return false;
   }
-  midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+  if (split_position != no_key && left_transpose != 0) {
+    // sustain pedal controls left section only
+    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel + 1);
+  } 
+  else {
+    // sustain pedal controls right section / whole range
+    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+  }
   #ifdef DEBUG_SUSTAIN
   if (external_switch) {
     Serial.println("sustain on");
@@ -411,8 +434,17 @@ const midi::DataByte DefaultVelocity = 80;
 
 void handleKeyEvent(int key, int t_raw) {
     midi::DataByte note = (midi::DataByte)(key + A);
-    int chan = key < split_position ? channel + 1 : channel;
-    note -= key >= split_position && split_position >= 12 ? 12 : 0;
+    int chan;
+    if (key < split_position) {
+      // left section
+      chan = channel + 1;
+      note += left_transpose;
+    } 
+    else {
+      // right section or whole keyboard
+      chan = channel;
+      note -= split_position >= 12 ? 12 : 0;
+    }
     chan &= 0xf;
     if (t_raw >= 0) { 
       int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
