@@ -28,6 +28,16 @@ void displayChannel(midi::Channel ch) {
   display((ch - 1) * meter_max / 9);
 }
 
+const int zoom = 3;
+/**
+ * Magnifies the difference from the display mean value.
+ * @value raw value
+ * @return zoomed value
+ */
+int magnify(int value) {
+  
+}
+
 /*--------------------------------- persistent settings ---------------------------------*/
 
 // the values in a fresh EEPROM

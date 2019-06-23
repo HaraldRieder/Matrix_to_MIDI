@@ -1,0 +1,90 @@
+Global sensitivity 155
+Sensitivity 0 160
+Sensitivity 1 150
+Sensitivity 2 160
+Sensitivity 3 150
+Sensitivity 4 160
+Sensitivity 5 150
+Sensitivity 6 160
+Sensitivity 7 min 145
+Sensitivity 8 160
+Sensitivity 9 155
+Sensitivity 10 160
+Sensitivity 11 150
+Sensitivity 12 160
+Sensitivity 13 150
+Sensitivity 14 160
+Sensitivity 15 150
+Sensitivity 16 160
+Sensitivity 17 150
+Sensitivity 18 160
+Sensitivity 19 150
+Sensitivity 20 160
+Sensitivity 21 150
+Sensitivity 22 160
+Sensitivity 23 150
+Sensitivity 24 160
+Sensitivity 25 150
+Sensitivity 26 MAX 165
+Sensitivity 27 150
+Sensitivity 28 160
+Sensitivity 29 150
+Sensitivity 30 160
+Sensitivity 31 150
+Sensitivity 32 160
+Sensitivity 33 150
+Sensitivity 34 MAX 165
+Sensitivity 35 150
+Sensitivity 36 160
+Sensitivity 37 150
+Sensitivity 38 160
+Sensitivity 39 150
+Sensitivity 40 MAX 165
+Sensitivity 41 150
+Sensitivity 42 160
+Sensitivity 43 150
+Sensitivity 44 160
+Sensitivity 45 150
+Sensitivity 46 160
+Sensitivity 47 150
+Sensitivity 48 160
+Sensitivity 49 150
+Sensitivity 50 160
+Sensitivity 51 150
+Sensitivity 52 MAX 165
+Sensitivity 53 150
+Sensitivity 54 160
+Sensitivity 55 min 145
+Sensitivity 56 160
+Sensitivity 57 150
+Sensitivity 58 MAX 165
+Sensitivity 59 150
+Sensitivity 60 160
+Sensitivity 61 min 145
+Sensitivity 62 160
+Sensitivity 63 150
+Sensitivity 64 160
+Sensitivity 65 155
+Sensitivity 66 160
+Sensitivity 67 155
+Sensitivity 68 160
+Sensitivity 69 150
+Sensitivity 70 160
+Sensitivity 71 150
+Sensitivity 72 160
+Sensitivity 73 155
+Sensitivity 74 160
+Sensitivity 75 150
+Sensitivity 76 160
+Sensitivity 77 150
+Sensitivity 78 160
+Sensitivity 79 150
+Sensitivity 80 160
+Sensitivity 81 150
+Sensitivity 82 160
+Sensitivity 83 150
+Sensitivity 84 155
+Sensitivity 85 min 145
+Sensitivity 86 160
+Sensitivity 87 160
+
