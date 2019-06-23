@@ -191,7 +191,7 @@ void process(Event event, int value, int value2) {
           digitalWrite(meter_led_pin, LOW);
           state = global_sensitivity;
           last_key = no_key;
-          display(settings.sensitivity);
+          display(magnify(settings.sensitivity));
           return;
         case down_long:
           digitalWrite(meter_led_pin, LOW);
@@ -262,21 +262,21 @@ void process(Event event, int value, int value2) {
           break;
         case note_off:
           // display global sensitivity 
-          display(settings.sensitivity);
+          display(magnify(settings.sensitivity));
           break;
         case up_short:
           if (settings.sensitivity < meter_max) {
             settings.sensitivity += meter_delta;
             Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
-          display(settings.sensitivity);
+          display(magnify(settings.sensitivity));
           return;
         case down_short:
           if (settings.sensitivity > 0) {
             settings.sensitivity -= meter_delta;
             Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
-          display(settings.sensitivity);
+          display(magnify(settings.sensitivity));
           return;
         case up_long:
         case down_long:
@@ -298,7 +298,7 @@ void process(Event event, int value, int value2) {
           break;
         case note_off:
           // display sensitivity of last key
-          display(settings.sensitivities[last_key]);
+          display(magnify(settings.sensitivities[last_key]));
           break;
         case up_short:
           if (last_key != no_key) {
@@ -306,7 +306,7 @@ void process(Event event, int value, int value2) {
               settings.sensitivities[last_key] += meter_delta;
               Serial.print("sens. "); Serial.println(settings.sensitivities[last_key]);
             }
-            display(settings.sensitivities[last_key]);
+            display(magnify(settings.sensitivities[last_key]));
           }
           return;
         case down_short:
@@ -315,7 +315,7 @@ void process(Event event, int value, int value2) {
               settings.sensitivities[last_key] -= meter_delta;
               Serial.print("sens. "); Serial.println(settings.sensitivities[last_key]);
             }
-            display(settings.sensitivities[last_key]);
+            display(magnify(settings.sensitivities[last_key]));
           }
           return;
         case up_long:

@@ -5,8 +5,8 @@ const byte MIDI_CONTROLLER_MEAN = 64;
 
 const int meter_pin = 2;
 const int meter_led_pin = A3;
-const byte meter_max = 255; // = 3*5*17 -> possible deltas
-const byte meter_delta = 5;
+const byte meter_max = 255; // = 1*3*5*17 -> possible deltas
+const byte meter_delta = 1;
 //const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
 // a cheap Conrad Elektronik meter of course is very non-linear, better measure the value
 // when the pointer is in the middle
@@ -28,14 +28,20 @@ void displayChannel(midi::Channel ch) {
   display((ch - 1) * meter_max / 9);
 }
 
+// how much differences from the mean sensitivity are
+// magnified 
 const int zoom = 3;
 /**
  * Magnifies the difference from the display mean value.
  * @value raw value
  * @return zoomed value
  */
-int magnify(int value) {
-  
+byte magnify(byte value) {
+  // value = meter_mean is not changed by the transformation
+  int magnified = zoom * (value - meter_mean) + meter_mean;
+  if (magnified > meter_max) return meter_max;
+  if (magnified < 0) return 0;
+  return magnified;
 }
 
 /*--------------------------------- persistent settings ---------------------------------*/
