@@ -404,13 +404,16 @@ bool externalSwitch() {
     // no change
     return false;
   }
-  if (split_position != no_key && left_transpose != 0) {
-    // sustain pedal controls left section only
-    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel + 1);
+  if (split_position == no_key) {
+    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+  }
+  else if (left_transpose != 0) {
+    // sustain pedal controls left section
+    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
   } 
   else {
-    // sustain pedal controls right section / whole range
-    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+    // sustain pedal controls right section
+    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel + 1);
   }
   #ifdef DEBUG_SUSTAIN
   if (external_switch) {
@@ -435,14 +438,17 @@ const midi::DataByte DefaultVelocity = 80;
 void handleKeyEvent(int key, int t_raw) {
     midi::DataByte note = (midi::DataByte)(key + A);
     int chan;
-    if (key < split_position) {
-      // left section
-      chan = channel + 1;
+    if (split_position == no_key) {
+      chan = channel;
+    } 
+    else if (key < split_position) {
+      // left section or whole keyboard
+      chan = channel;
       note += left_transpose;
     } 
     else {
-      // right section or whole keyboard
-      chan = channel;
+      // right section
+      chan = channel + 1;
       note -= split_position >= 12 ? 12 : 0;
     }
     chan &= 0xf;
