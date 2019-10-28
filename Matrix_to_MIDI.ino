@@ -438,6 +438,7 @@ const midi::DataByte DefaultVelocity = 80;
 void handleKeyEvent(int key, int t_raw) {
     midi::DataByte note = (midi::DataByte)(key + A);
     int chan;
+    boolean duplicate = false;
     if (split_position == no_key) {
       chan = channel;
     } 
@@ -450,6 +451,7 @@ void handleKeyEvent(int key, int t_raw) {
       // right section
       chan = channel + 1;
       note -= split_position >= 12 ? 12 : 0;
+      duplicate = true;
     }
     chan &= 0xf;
     if (t_raw >= 0) { 
@@ -459,6 +461,9 @@ void handleKeyEvent(int key, int t_raw) {
       else if (t < 0)
         t = 0;
       midi1.sendNoteOn(note, velocities[t], chan);
+      if (duplicate) {
+        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
+      }
       #ifdef DEBUG_VELOCITY
       Serial.print("meter_mean: "); Serial.print(meter_mean); Serial.print(" ");
       Serial.print(t_raw); Serial.print("->"); Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
@@ -469,6 +474,9 @@ void handleKeyEvent(int key, int t_raw) {
     }
     else {
       midi1.sendNoteOff(note, DefaultVelocity, chan);
+      if (duplicate) {
+        midi1.sendNoteOff(note, DefaultVelocity, chan + 1);
+      }
       if (state != idle) {
         process(note_off, key, DefaultVelocity);
       }
