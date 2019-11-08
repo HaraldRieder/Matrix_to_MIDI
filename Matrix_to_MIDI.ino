@@ -404,16 +404,18 @@ bool externalSwitch() {
     // no change
     return false;
   }
+  midi::DataByte ctrlval = (external_switch = val) == HIGH ? 127 : 0;
   if (split_position == no_key) {
-    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+    midi1.sendControlChange(midi::Sustain, ctrlval, channel);
   }
   else if (left_transpose != 0) {
     // sustain pedal controls left section
-    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel);
+    midi1.sendControlChange(midi::Sustain, ctrlval, channel);
   } 
   else {
     // sustain pedal controls right section
-    midi1.sendControlChange(midi::Sustain, (external_switch = val) == HIGH ? 127 : 0, channel + 1);
+    midi1.sendControlChange(midi::Sustain, ctrlval, channel + 1);
+    midi1.sendControlChange(midi::Sustain, ctrlval, channel + 2);
   }
   #ifdef DEBUG_SUSTAIN
   if (external_switch) {
