@@ -4,9 +4,12 @@
 This project runs successfully on Arduino Mega 2560 when built with Arduino 2: 1.0.5+dfsg2-4 IDE.
 Chosen board: Arduino Mega 2560 or Mega ADK
 
-This project does *NOT* run on Arduino Mega 2560 when built with Arduino 1.8.10!
-Chosen board: Arduino/Genuino Mega or Mega 2560
-The software seems to crash and the board is booting cyclically.
+This project did out-of-the-box *NOT* run on Arduino Mega 2560 when built with Arduino 1.8.10!
+The software crashed and the board booted cyclically.
+
+I found out that the direct port I/O in Matrix.h was responsible. For other reasons
+I changed the compiler option to -O3 and this seems to have repaired the 
+direct port I/O code, too. See platform.txt.
 
 ***************** WARNING *****************/
 
