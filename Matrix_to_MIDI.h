@@ -1,3 +1,5 @@
+#pragma GCC optimize ("O3")
+
 // max. value of a MIDI controller
 const byte MIDI_CONTROLLER_MAX = 127;
 const byte MIDI_CONTROLLER_MEAN = 64;

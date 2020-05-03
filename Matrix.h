@@ -1,3 +1,4 @@
+#pragma GCC optimize ("O3")
 #include "Time.h"
 
 // report measured key press times to serial?
@@ -15,16 +16,16 @@ keyboard scanned by diode matrix
  * @param key 0 = most left key, normally an A (88 keys) 
  * @param time measured time for key pressure in units of 128 microseconds, less than 0 for a released key
  */
-void handleKeyEvent(int key, int time);
+void handleKeyEvent(byte key, int time);
 
-const int n_columns = 8; // neighbour keys belong to different columns
-const int n_rows = 11; // 8 * 11= 88 keys
+const byte n_columns = 8; // neighbour keys belong to different columns
+const byte n_rows = 11; // 8 * 11= 88 keys
 
 /* 0 or when the key pressure started in Arduino milli seconds (uptime) */
 long key_states[n_columns * n_rows] ; // all off, most left key = 0
 
 /* normally closed pins (Ruhekontakte) */
-const int nc_row_pins[n_rows] = {
+const byte nc_row_pins[n_rows] = {
 // Arduino pin // matrix pin ATMega port+bit
    43,         // R1         L6
    40,         // R2         G1
@@ -40,7 +41,7 @@ const int nc_row_pins[n_rows] = {
 };
 
 /* normally open pins (Arbeitskontakte) */
-const int no_row_pins[n_rows] = {
+const byte no_row_pins[n_rows] = {
 // Arduino pin // matrix pin ATMega port+bit
    47,         // A1         L2
    36,         // A2         C1
@@ -55,7 +56,7 @@ const int no_row_pins[n_rows] = {
    28          // A11        A6
 };
 
-const int row_pins[n_rows] = {
+const byte row_pins[n_rows] = {
 // Arduino pin // 1..11      ATMega port+bit
    45,         // 1          L4
    38,         // 2          D7
@@ -71,7 +72,7 @@ const int row_pins[n_rows] = {
 };
 
 /* These are connected to the anodes of the diodes. */
-const int column_pins[n_columns] = {
+const byte column_pins[n_columns] = {
 // Arduino pin // matrix pin ATMega port+bit
    6,          // G1         H3        
    7,          // G2         H4
@@ -87,13 +88,13 @@ const int column_pins[n_columns] = {
  * To be called in Arduino setup().
  */
 void setupMatrixPins() {
-  for (int i = 0; i < n_rows; i++) {
+  for (byte i = 0; i < n_rows; i++) {
     pinMode(nc_row_pins[i], INPUT);
     pinMode(no_row_pins[i], INPUT);
     pinMode(row_pins[i], OUTPUT);
     digitalWrite(row_pins[i], HIGH);
   }
-  for (int i = 0; i < n_columns; i++) {
+  for (byte i = 0; i < n_columns; i++) {
     pinMode(column_pins[i], OUTPUT);
     digitalWrite(column_pins[i], LOW);
   }
@@ -112,7 +113,7 @@ void scanMatrix() {
   #ifdef DEBUG_SCAN_TIME
   unsigned long t_start = micros();
   #endif
-  for (int row = 0; row < n_rows; row++) {
+  for (byte row = 0; row < n_rows; row++) {
     //digitalWrite(row_pins[row], LOW);
     switch (row) {
       case 0:  PORTL ^= (1<<4); break;
@@ -127,7 +128,7 @@ void scanMatrix() {
       case 9:  PORTA ^= (1<<5); break;
       case 10: PORTA ^= (1<<4); break;
     }
-    for (int column = 0; column < n_columns; column++) {
+    for (byte column = 0; column < n_columns; column++) {
       //digitalWrite(column_pins[column], HIGH);
       switch (column) {
         case 0: PORTH |= (1<<3); break;
@@ -139,11 +140,11 @@ void scanMatrix() {
         case 6: PORTB |= (1<<6); break;
         case 7: PORTB |= (1<<7); break;
       }
-      int index = column + row * n_columns;
+      byte index = column + row * n_columns;
       long & state = key_states[index]; 
       // normally closed contact triggers start of time measurement and key-off
       //int value = digitalRead(nc_row_pins[row]);
-      int value;
+      byte value;
       switch (row) {
         case 0:  value = PINL & (1<<6); break;
         case 1:  value = PING & (1<<1); break;
@@ -165,7 +166,8 @@ void scanMatrix() {
       } else {
         if (state == 0) {
           // start of key-down
-          state = _128_micros(); // now state > 0
+          //state = _128_micros(); // now state > 0
+          state = micros() >> 7;
         }
       }
       // normally open contact triggers key-on
@@ -184,7 +186,8 @@ void scanMatrix() {
         case 10: value = PINA & (1<<6); break;
       }
       if (value != 0 && state > 0) {
-        int t = _128_micros() - state;
+        //int t = _128_micros() - state;
+        int t = (micros() >> 7) - state;
         handleKeyEvent(index, t);
         state = -1;
       }
@@ -220,7 +223,13 @@ void scanMatrix() {
   if (scan_time_us > max_scan_time_us) {
     max_scan_time_us = scan_time_us;
     Serial.print(max_scan_time_us); Serial.println(" microseconds max. scan time");
-    // highest observed value: 2 ms
+    // measured max. scan time values: 
+    // 2.0 ms direct port i/o, -Os gcc option (platform.txt)
+    // 2.6 ms digitalRead/Write, -Os gcc option
+    // 2.5 ms digitalRead/Write, -O2 gcc option
+    // 2.0 ms digitalRead/Write, -O3 gcc option
+    // 1.0 ms direct port i/o, -O3 gcc option
+    // Seems that -Os does not work any more with direct i/o as used here since ?Arduino 1.8.11?.
   }
   #endif
 }

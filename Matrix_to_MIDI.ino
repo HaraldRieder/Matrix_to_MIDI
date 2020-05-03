@@ -62,7 +62,7 @@ void setup() {
   displayChannel(channel);
   for (int i = 1; i <= 20; i++) {
     delay(250);
-    int newChannel = readCodingSwitchValue(A1) + 1;
+    byte newChannel = readCodingSwitchValue(A1) + 1;
     displayChannel(newChannel);
     if (newChannel != channel) {
       channel = newChannel;
@@ -449,9 +449,9 @@ const midi::DataByte DefaultVelocity = 80;
 // report calculated MIDI velocity
 //#define DEBUG_VELOCITY
 
-void handleKeyEvent(int key, int t_raw) {
-    midi::DataByte note = (midi::DataByte)(key + A);
-    int chan;
+void handleKeyEvent(byte key, int t_raw) {
+    midi::DataByte note = key + A;
+    byte chan;
     boolean duplicate = false;
     if (split_position == no_key) {
       chan = channel;
