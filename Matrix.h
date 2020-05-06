@@ -1,22 +1,26 @@
 #pragma GCC optimize ("O3")
 #include "Time.h"
 
-// report measured key press times to serial?
-//#define DEBUG_TIMES
-
 // report maximum duration of 1 scanMatrix() call
-#define DEBUG_SCAN_TIME
+//#define DEBUG_SCAN_TIME
 
 /* 
 keyboard scanned by diode matrix
 */
 
 /**
- * Called if a state change (key pressed down or released) is detected by the matrix scanner.
+ * Called on key down.
  * @param key 0 = most left key, normally an A (88 keys) 
  * @param time measured time for key pressure in units of 128 microseconds, less than 0 for a released key
  */
-void handleKeyEvent(byte key, int time);
+void handleKeyDownEvent(byte key, int time);
+
+/**
+ * Called on key up.
+ * @param key 0 = most left key, normally an A (88 keys) 
+ */
+void handleKeyUpEvent(byte key);
+
 
 const byte n_columns = 8; // neighbour keys belong to different columns
 const byte n_rows = 11; // 8 * 11= 88 keys
@@ -165,7 +169,7 @@ void scanMatrix() {
       if (value != 0) {
         if (state == 2) {
           // key released
-          handleKeyEvent(index, -1);
+          handleKeyUpEvent(index);
         }
         state = 0;
       } else {
@@ -195,7 +199,7 @@ void scanMatrix() {
         if (value != 0) {
           //int t = _128_micros() - state;
           int t = (micros() >> 7) - key_times[index];
-          handleKeyEvent(index, t);
+          handleKeyDownEvent(index, t);
           state = 2;
         }
       }
@@ -238,6 +242,7 @@ void scanMatrix() {
     // 2.0 ms digitalRead/Write, -O3 gcc option
     // 1.0 ms direct port i/o, -O3 gcc option
     // Seems that -Os does not work any more with direct i/o as used here since ?Arduino 1.8.11?.
+    // 0.76 ms after code optimizations
   }
   #endif
 }

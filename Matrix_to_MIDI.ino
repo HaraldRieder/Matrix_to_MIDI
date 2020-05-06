@@ -101,7 +101,7 @@ unsigned long last_blink = 0/*ms*/;
 boolean keyboard_led_on = false;
 
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
-#define DEBUG_EX_SCAN_TIME
+//#define DEBUG_EX_SCAN_TIME
 
 State state = idle;
 
@@ -451,7 +451,7 @@ const midi::DataByte DefaultVelocity = 80;
 // report calculated MIDI velocity
 //#define DEBUG_VELOCITY
 
-void handleKeyEvent(byte key, int t_raw) {
+void handleKeyDownEvent(byte key, int t_raw) {
     midi::DataByte note = key + A;
     byte chan;
     boolean duplicate = false;
@@ -470,31 +470,48 @@ void handleKeyEvent(byte key, int t_raw) {
       duplicate = true;
     }
     chan &= 0xf;
-    if (t_raw >= 0) { 
-      int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
-      if (t >= t_max)
-        t = t_max - 1;
-      else if (t < 0)
-        t = 0;
-      midi1.sendNoteOn(note, velocities[t], chan);
-      if (duplicate) {
-        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
-      }
-      #ifdef DEBUG_VELOCITY
-      Serial.print("meter_mean: "); Serial.print(meter_mean); Serial.print(" ");
-      Serial.print(t_raw); Serial.print("->"); Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
-      #endif
-      if (state != idle) {
-        process(note_on, key, velocities[t]);
-      }
+    int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
+    if (t >= t_max)
+      t = t_max - 1;
+    else if (t < 0)
+      t = 0;
+    midi1.sendNoteOn(note, velocities[t], chan);
+    if (duplicate) {
+      midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
     }
+    #ifdef DEBUG_VELOCITY
+    Serial.print("meter_mean: "); Serial.print(meter_mean); Serial.print(" ");
+    Serial.print(t_raw); Serial.print("->"); Serial.print(t); Serial.print(" * 128 us -> "); Serial.println(velocities[t]);
+    #endif
+    if (state != idle) {
+      process(note_on, key, velocities[t]);
+    }
+}
+
+void handleKeyUpEvent(byte key) {
+    midi::DataByte note = key + A;
+    byte chan;
+    boolean duplicate = false;
+    if (split_position == no_key) {
+      chan = channel;
+    } 
+    else if (key < split_position) {
+      // left section or whole keyboard
+      chan = channel;
+      note += left_transpose;
+    } 
     else {
-      midi1.sendNoteOff(note, DefaultVelocity, chan);
-      if (duplicate) {
-        midi1.sendNoteOff(note, DefaultVelocity, chan + 1);
-      }
-      if (state != idle) {
-        process(note_off, key, DefaultVelocity);
-      }
+      // right section
+      chan = channel + 1;
+      note -= split_position >= 12 ? 12 : 0;
+      duplicate = true;
+    }
+    chan &= 0xf;
+    midi1.sendNoteOff(note, DefaultVelocity, chan);
+    if (duplicate) {
+      midi1.sendNoteOff(note, DefaultVelocity, chan + 1);
+    }
+    if (state != idle) {
+      process(note_off, key, DefaultVelocity);
     }
 }
