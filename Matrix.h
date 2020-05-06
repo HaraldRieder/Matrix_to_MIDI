@@ -5,7 +5,7 @@
 //#define DEBUG_TIMES
 
 // report maximum duration of 1 scanMatrix() call
-//#define DEBUG_SCAN_TIME
+#define DEBUG_SCAN_TIME
 
 /* 
 keyboard scanned by diode matrix
@@ -100,7 +100,9 @@ void setupMatrixPins() {
   }
 }
 
+#ifdef DEBUG_SCAN_TIME
 int max_scan_time_us;
+#endif
 
 // This procedure uses direct port manipulation and is around twice as fast as with digitalRead/Write.
 // http://harperjiangnew.blogspot.de/2013/05/arduino-port-manipulation-on-mega-2560.html
@@ -170,26 +172,28 @@ void scanMatrix() {
           state = micros() >> 7;
         }
       }
-      // normally open contact triggers key-on
-      //value = digitalRead(no_row_pins[row]);
-      switch (row) {
-        case 0:  value = PINL & (1<<2); break;
-        case 1:  value = PINC & (1<<1); break;
-        case 2:  value = PINL & (1<<0); break;
-        case 3:  value = PINL & (1<<7); break;
-        case 4:  value = PINL & (1<<1); break;
-        case 5:  value = PING & (1<<5); break;
-        case 6:  value = PING & (1<<0); break;
-        case 7:  value = PINC & (1<<3); break;
-        case 8:  value = PINC & (1<<2); break;
-        case 9:  value = PINA & (1<<7); break;
-        case 10: value = PINA & (1<<6); break;
-      }
-      if (value != 0 && state > 0) {
-        //int t = _128_micros() - state;
-        int t = (micros() >> 7) - state;
-        handleKeyEvent(index, t);
-        state = -1;
+      if (state > 0) {
+        // normally open contact triggers key-on
+        //value = digitalRead(no_row_pins[row]);
+        switch (row) {
+          case 0:  value = PINL & (1<<2); break;
+          case 1:  value = PINC & (1<<1); break;
+          case 2:  value = PINL & (1<<0); break;
+          case 3:  value = PINL & (1<<7); break;
+          case 4:  value = PINL & (1<<1); break;
+          case 5:  value = PING & (1<<5); break;
+          case 6:  value = PING & (1<<0); break;
+          case 7:  value = PINC & (1<<3); break;
+          case 8:  value = PINC & (1<<2); break;
+          case 9:  value = PINA & (1<<7); break;
+          case 10: value = PINA & (1<<6); break;
+        }
+        if (value != 0) {
+          //int t = _128_micros() - state;
+          int t = (micros() >> 7) - state;
+          handleKeyEvent(index, t);
+          state = -1;
+        }
       }
       //digitalWrite(column_pins[column], LOW);
       switch (column) {
@@ -235,5 +239,3 @@ void scanMatrix() {
 }
 
  
-
-

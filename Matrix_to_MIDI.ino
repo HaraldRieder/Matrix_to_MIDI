@@ -101,14 +101,12 @@ unsigned long last_blink = 0/*ms*/;
 boolean keyboard_led_on = false;
 
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
-//#define DEBUG_EX_SCAN_TIME
+#define DEBUG_EX_SCAN_TIME
 
 State state = idle;
 
 void loop() {
   static int i_led;
-
-  scanMatrix();
 
   unsigned long t = millis();
   
@@ -149,6 +147,7 @@ void loop() {
       Serial.print(max_ex_scan_time_us); Serial.println(" microseconds max. ex. scan");
     }
   }
+  // typical max. value: 20 microseconds
   #endif
   
   scanMatrix();
