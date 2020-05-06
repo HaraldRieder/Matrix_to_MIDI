@@ -22,7 +22,8 @@ const byte n_columns = 8; // neighbour keys belong to different columns
 const byte n_rows = 11; // 8 * 11= 88 keys
 
 /* 0 or when the key pressure started in Arduino milli seconds (uptime) */
-long key_states[n_columns * n_rows] ; // all off, most left key = 0
+byte key_states[n_columns * n_rows]; // most left key = 0, 0 = up, 1 = between, 2 = down
+unsigned int key_times[n_columns * n_rows];
 
 /* normally closed pins (Ruhekontakte) */
 const byte nc_row_pins[n_rows] = {
@@ -114,8 +115,8 @@ int max_scan_time_us;
 void scanMatrix() {
   #ifdef DEBUG_SCAN_TIME
   unsigned long t_start = micros();
-  #endif
-  for (byte row = 0; row < n_rows; row++) {
+  #endif  
+  for (byte row = 0, index_base = 0; row < n_rows; row++, index_base += n_columns) {
     //digitalWrite(row_pins[row], LOW);
     switch (row) {
       case 0:  PORTL ^= (1<<4); break;
@@ -142,8 +143,9 @@ void scanMatrix() {
         case 6: PORTB |= (1<<6); break;
         case 7: PORTB |= (1<<7); break;
       }
-      byte index = column + row * n_columns;
-      long & state = key_states[index]; 
+      //byte index = column + row * n_columns;
+      byte index = index_base + column;
+      byte & state = key_states[index]; 
       // normally closed contact triggers start of time measurement and key-off
       //int value = digitalRead(nc_row_pins[row]);
       byte value;
@@ -161,7 +163,8 @@ void scanMatrix() {
         case 10: value = PINA & (1<<2); break;
       }
       if (value != 0) {
-        if (state < 0) {
+        if (state == 2) {
+          // key released
           handleKeyEvent(index, -1);
         }
         state = 0;
@@ -169,10 +172,11 @@ void scanMatrix() {
         if (state == 0) {
           // start of key-down
           //state = _128_micros(); // now state > 0
-          state = micros() >> 7;
+          key_times[index] = micros() >> 7;
+          state = 1;
         }
       }
-      if (state > 0) {
+      if (state == 1) {
         // normally open contact triggers key-on
         //value = digitalRead(no_row_pins[row]);
         switch (row) {
@@ -190,9 +194,9 @@ void scanMatrix() {
         }
         if (value != 0) {
           //int t = _128_micros() - state;
-          int t = (micros() >> 7) - state;
+          int t = (micros() >> 7) - key_times[index];
           handleKeyEvent(index, t);
-          state = -1;
+          state = 2;
         }
       }
       //digitalWrite(column_pins[column], LOW);
