@@ -9,6 +9,7 @@ const int meter_pin = 2;
 const int meter_led_pin = A3;
 const byte meter_max = 255; // = 1*3*5*17 -> possible deltas
 const byte meter_delta = 1;
+const byte global_delta = 17;
 //const byte meter_mean = (meter_max / (meter_delta*2)) * meter_delta;
 // a cheap Conrad Elektronik meter of course is very non-linear, better measure the value
 // when the pointer is in the middle
@@ -52,6 +53,13 @@ byte magnify(byte value) {
 const byte invalid = 0xff;
 
 /*--------- global settings ---------*/
+
+float global_sens_to_exponent(byte sensitivity) {
+  float ret = 1.0 - 0.5 * sensitivity / meter_max;
+  Serial.print("exponent "); Serial.println(ret);
+  return ret;
+}
+
 // start address of global settings storage area in EEPROM
 const int SettingsAddress = 0;
 const int n_keys = n_columns * n_rows;
@@ -75,7 +83,7 @@ struct Settings {
 Settings settings;
 
 void printSettings() {
-  Serial.print("Global sensitivity "); Serial.println(settings.sensitivity);
+  Serial.print("global sensitivity "); Serial.println(settings.sensitivity);
   byte min_key_sens = 255; 
   byte max_key_sens = 0; 
   // find min. and max.
@@ -89,7 +97,7 @@ void printSettings() {
   // print
   for (int i = 0; i < n_keys; i++) {
     int sens = settings.sensitivities[i];
-    Serial.print("Sensitivity ");
+    Serial.print("sensitivity ");
     Serial.print(i);
     if (sens == max_key_sens) {
       Serial.print(" MAX ");
@@ -146,4 +154,3 @@ enum State { idle, global_sensitivity, key_sensitivity, wait_for_split};
 enum Event { up_long, down_long, up_short, down_short, note_on, note_off, toggle_led };
 
 void process(Event event, int value, int value2);
-

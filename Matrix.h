@@ -25,8 +25,10 @@ void handleKeyUpEvent(byte key);
 const byte n_columns = 8; // neighbour keys belong to different columns
 const byte n_rows = 11; // 8 * 11= 88 keys
 
-/* 0 or when the key pressure started in Arduino milli seconds (uptime) */
-byte key_states[n_columns * n_rows]; // most left key = 0, 0 = up, 1 = between, 2 = down
+/* 0 = up, 1 = between, 2 = down */
+byte key_states[n_columns * n_rows]; // most left key = 0
+/* when the key pressure started in 128 Arduino micro seconds
+   i.e. time after boot wraps to 0 every 8.4 seconds */
 unsigned int key_times[n_columns * n_rows];
 
 /* normally closed pins (Ruhekontakte) */
@@ -175,7 +177,6 @@ void scanMatrix() {
       } else {
         if (state == 0) {
           // start of key-down
-          //state = _128_micros(); // now state > 0
           key_times[index] = micros() >> 7;
           state = 1;
         }
@@ -197,7 +198,6 @@ void scanMatrix() {
           case 10: value = PINA & (1<<6); break;
         }
         if (value != 0) {
-          //int t = _128_micros() - state;
           int t = (micros() >> 7) - key_times[index];
           handleKeyDownEvent(index, t);
           state = 2;

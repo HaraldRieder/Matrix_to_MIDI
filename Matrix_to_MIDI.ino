@@ -78,7 +78,7 @@ void setup() {
   setupMatrixPins();
 
   readSettings();
-  initVelocities();
+  initVelocities(global_sens_to_exponent(settings.sensitivity));
 
   midi1.begin(1/*dummy input channel*/);
   
@@ -89,6 +89,8 @@ void setup() {
   //TIMSK3 = 0; we need timer 3 for PWM at pin 2
   TIMSK4 = 0;
   TIMSK5 = 0;
+
+  Serial.println("ready");
 }
 
 // max. time Arduino consumes between 2 calls of loop()
@@ -280,17 +282,17 @@ void process(Event event, int value, int value2) {
           break;
         case up_short:
           if (settings.sensitivity < meter_max) {
-            settings.sensitivity += meter_delta;
+            initVelocities(global_sens_to_exponent(settings.sensitivity += global_delta));
             Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
-          display(magnify(settings.sensitivity));
+          display(settings.sensitivity);
           return;
         case down_short:
           if (settings.sensitivity > 0) {
-            settings.sensitivity -= meter_delta;
+            initVelocities(global_sens_to_exponent(settings.sensitivity -= global_delta));
             Serial.print("sens. "); Serial.println(settings.sensitivity);
           }
-          display(magnify(settings.sensitivity));
+          display(settings.sensitivity);
           return;
         case up_long:
         case down_long:
@@ -470,7 +472,7 @@ void handleKeyDownEvent(byte key, int t_raw) {
       duplicate = true;
     }
     chan &= 0xf;
-    int t = t_raw - settings.sensitivity - settings.sensitivities[key] + (meter_mean << 1);
+    int t = t_raw - settings.sensitivities[key] + meter_mean;
     if (t >= t_max)
       t = t_max - 1;
     else if (t < 0)
