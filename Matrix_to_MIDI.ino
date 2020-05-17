@@ -207,7 +207,7 @@ void process(Event event, int value, int value2) {
           digitalWrite(meter_led_pin, LOW);
           state = global_sensitivity;
           last_key = no_key;
-          display(magnify(settings.sensitivity));
+          display(settings.sensitivity);
           return;
         case down_long:
           digitalWrite(meter_led_pin, LOW);
@@ -278,7 +278,7 @@ void process(Event event, int value, int value2) {
           break;
         case note_off:
           // display global sensitivity 
-          display(magnify(settings.sensitivity));
+          display(settings.sensitivity);
           break;
         case up_short:
           if (settings.sensitivity < meter_max) {
