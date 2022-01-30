@@ -25,6 +25,7 @@ direct port I/O code, too. See platform.txt.
 #include "Matrix_to_MIDI.h"
 #include "ScaleTune.h"
 #include "CodingSwitch.h"
+#include "V3GrandPianoXXL.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
@@ -45,8 +46,8 @@ int left_transpose = 0;
 const int black_button_pin = 22;
 const int green_button_pin = 23;
 const int external_switch_pin = A0; // = F0 ATMega port+bit
-boolean black_button = false;
-boolean green_button = false;
+boolean black_button = false; // "up"
+boolean green_button = false; // "down"
 int external_switch = LOW;
 
 void setup() {
@@ -130,7 +131,7 @@ void loop() {
           break;
       }
       break;
-    default:      
+    default:
       if (t >= last_blink + period) {
         last_blink = t;
         process(toggle_led, -1, -1);
@@ -173,6 +174,7 @@ void process(Event event, int value, int value2) {
   switch (state) {
     case idle:               Serial.print("idle");           break;
     case wait_for_split:     Serial.print("wait for split"); break;
+    case wait_for_preset:    Serial.print("wait for preset");break;
     case global_sensitivity: Serial.print("global sens.");   break;
     case key_sensitivity:    Serial.print("key sens.");      break;
   }
@@ -228,23 +230,28 @@ void process(Event event, int value, int value2) {
               state = idle;
             }
             split_position = no_key;
+            return;
           }
-          else if (split_position != no_key) {
-            // toggle left transpose
-            digitalWrite(meter_led_pin, LOW);
-            if (left_transpose == 0) {
-              left_transpose = 12;
-              display(meter_max);
-            } 
-            else {
-              left_transpose = 0;
+          if (event == up_short) {
+            if (split_position != no_key) {
+              // toggle left transpose
+              digitalWrite(meter_led_pin, LOW);
+              if (left_transpose == 0) {
+                left_transpose = 12;
+                display(meter_max);
+              } 
+              else {
+                left_transpose = 0;
+                display(0);
+              }
+              delay(1500);
+              digitalWrite(meter_led_pin, HIGH);
               display(0);
             }
-            delay(1500);
-            digitalWrite(meter_led_pin, HIGH);
-            display(0);
           }
-          return;
+          else {
+            state = wait_for_preset;  
+          }
       }
       return;
       
@@ -266,6 +273,22 @@ void process(Event event, int value, int value2) {
             state = idle;
             split_position = no_key;
           }
+          return;
+      }
+      return;
+
+    case wait_for_preset:
+      // TODO presets in split mode
+      switch (event) {
+        case note_off:
+          if (value < n_preset_sounds) {
+            sendSound(preset_sounds[value], channel, midi1);
+            state = idle;
+          }
+          return;
+        case up_short:
+        case down_short:
+          state = idle;
           return;
       }
       return;

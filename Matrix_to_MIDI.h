@@ -150,7 +150,7 @@ void saveSettings() {
 
 /*--------------------------------- state event machine ---------------------------------*/
 
-enum State { idle, global_sensitivity, key_sensitivity, wait_for_split};
+enum State { idle, global_sensitivity, key_sensitivity, wait_for_split, wait_for_preset};
 enum Event { up_long, down_long, up_short, down_short, note_on, note_off, toggle_led };
 
 void process(Event event, int value, int value2);
