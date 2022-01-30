@@ -278,12 +278,21 @@ void process(Event event, int value, int value2) {
       return;
 
     case wait_for_preset:
-      // TODO presets in split mode
       switch (event) {
         case note_off:
-          if (value < n_preset_sounds) {
-            sendSound(preset_sounds[value], channel, midi1);
-            state = idle;
+          if (split_position == no_key) {
+            if (value < n_preset_sounds) {
+              sendSound(preset_sounds[value], channel, midi1);
+              state = idle;
+            }
+          }
+          else {
+            if (value < n_preset_splits) {
+              sendSound(preset_splits[value].left, channel, midi1);
+              sendSound(preset_splits[value].right1, channel + 1, midi1);
+              sendSound(preset_splits[value].right2, channel + 2, midi1);
+              state = idle;
+            }
           }
           return;
         case up_short:
