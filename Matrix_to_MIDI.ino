@@ -103,6 +103,9 @@ const int period = 400/*ms*/;
 unsigned long last_blink = 0/*ms*/;
 boolean keyboard_led_on = false;
 
+/* 3 dodecimes to select left sounds */
+const midi::DataByte right_sounds_start = 12*3;
+
 // report the max. time between calls of scanMatrix, highest observed value: 24 us
 //#define DEBUG_EX_SCAN_TIME
 
@@ -281,17 +284,34 @@ void process(Event event, int value, int value2) {
       switch (event) {
         case note_off:
           if (split_position == no_key) {
-            if (value < n_preset_sounds) {
-              sendSound(preset_sounds[value], channel, midi1);
+            if (value < n_sounds) {
+              sendSound(sounds[value], channel, midi1);
               state = idle;
             }
           }
           else {
-            if (value < n_preset_splits) {
-              sendSound(preset_splits[value].left, channel, midi1);
-              sendSound(preset_splits[value].right1, channel + 1, midi1);
-              sendSound(preset_splits[value].right2, channel + 2, midi1);
-              state = idle;
+            if (value < right_sounds_start) {
+              // set left sound
+              if (left_transpose == 0) {
+                if (value < n_bass_sounds) {
+                  sendSound(bass_sounds[value], channel, midi1);
+                  state = idle;
+                }
+              } 
+              else {
+                if (value < n_sounds) {
+                  sendSound(sounds[value], channel, midi1);
+                  state = idle;
+                }
+              }
+            }
+            else {
+              value -= right_sounds_start;
+              if (value < n_right_layers) {
+                sendSound(right_layers[value]->right1, channel + 1, midi1);
+                sendSound(right_layers[value]->right2, channel + 2, midi1);
+                state = idle;
+              }
             }
           }
           return;
@@ -509,9 +529,11 @@ void handleKeyDownEvent(byte key, int t_raw) {
       t = t_max - 1;
     else if (t < 0)
       t = 0;
-    midi1.sendNoteOn(note, velocities[t], chan);
-    if (duplicate) {
-      midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
+    if (state != wait_for_split && state != wait_for_preset) {
+      midi1.sendNoteOn(note, velocities[t], chan);
+      if (duplicate) {
+        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
+      }
     }
     #ifdef DEBUG_VELOCITY
     Serial.print("meter_mean: "); Serial.print(meter_mean); Serial.print(" ");
