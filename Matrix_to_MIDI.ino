@@ -34,7 +34,7 @@ midi::Channel channel = 1;
 /*--------------------------------- setup and main loop ---------------------------------*/
 
 int slice_counter = 0;
-const int n_slices = 7;
+const int n_slices = 6;
 
 const int keyboard_led_pin = A2; // = F2 ATMega port+bit
 
@@ -46,6 +46,12 @@ int left_transpose = 0;
 const int black_button_pin = 22;
 const int green_button_pin = 23;
 const int external_switch_pin = A0; // = F0 ATMega port+bit
+const int external_control_pin = A4; 
+int external_control_val = 1023; // 0..1023 analog value
+int external_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
+const int volume_control_pin = A5;
+int volume_control_val = 1023; // 0..1023 analog value
+int volume_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
 boolean black_button = false; // "up"
 boolean green_button = false; // "down"
 int external_switch = LOW;
@@ -115,6 +121,38 @@ void loop() {
   static int i_led;
 
   unsigned long t = millis();
+  int inval;
+  switch (slice_counter) {
+    case 0:
+      buttons(t);
+      break;
+    case 2:
+      inval = analogRead(volume_control_pin);
+      // if changed, with +-2 jitter suppression
+      if (inval > volume_control_val + 2 || inval < volume_control_val - 2) {
+        volume_control_val = inval;
+        inval /= 8;
+        if (inval != volume_val) {
+          process(volume_knob, volume_val = inval, -1);
+          Serial.print("volume val "); Serial.println(volume_val);
+        }
+      }
+      break;
+    case 4:
+      inval = analogRead(external_control_pin);
+      // if changed, with +-2 jitter suppression
+      if (inval > external_control_val + 2 || inval < external_control_val - 2) {
+        external_control_val = inval;
+        inval /= 8;
+        if (inval != external_val) {
+          process(ext_ctrl, external_val = inval, -1);
+          //Serial.print("external val "); Serial.println(external_val);
+        }
+      }
+      break;
+    default:       
+      externalSwitch();
+  }
   
   switch (state) {
     case idle: case global_sensitivity:
@@ -141,10 +179,6 @@ void loop() {
       }
   }
   
-  if (!externalSwitch()) {
-    buttons(t);
-  }
-  
   #ifdef DEBUG_EX_SCAN_TIME
   if (t_start > 0) {
     int ex_scan_time_us = micros() - t_start;
@@ -157,10 +191,15 @@ void loop() {
   #endif
   
   scanMatrix();
-  
+
   #ifdef DEBUG_EX_SCAN_TIME
   t_start = micros();
   #endif
+  
+  slice_counter++;
+  if (slice_counter >= n_slices) {
+    slice_counter = 0;
+  }
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
@@ -465,12 +504,12 @@ void buttons(unsigned long t_millis) {
  * Reads external switch value and sends MIDI sustain control change if necessary.
  * @return true on value change
  */
-bool externalSwitch() {
+void externalSwitch() {
   int val = digitalRead(external_switch_pin);
   //int val = (PINF & 0x01 == 0) ? LOW : HIGH;
   if (val == external_switch) {
     // no change
-    return false;
+    return;
   }
   midi::DataByte ctrlval = (external_switch = val) == HIGH ? 127 : 0;
   if (split_position == no_key) {
@@ -493,7 +532,6 @@ bool externalSwitch() {
     Serial.println("sustain off");
   }    
   #endif
-  return true;
 }
 
 /*--------------------------------- event from matrix ---------------------------------*/
