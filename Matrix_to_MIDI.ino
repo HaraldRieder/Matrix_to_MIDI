@@ -144,7 +144,8 @@ void loop() {
       // if changed, with +-2 jitter suppression
       if (inval > external_control_val + 2 || inval < external_control_val - 2) {
         external_control_val = inval;
-        inval /= 8;
+        if (true) inval = delog(inval)/8; // for logarithmic/audio pedals
+        else inval /= 8; // for linear pedals
         if (inval != external_val) {
           external_val = inval;
           externalControl();
@@ -202,6 +203,15 @@ void loop() {
   if (slice_counter >= n_slices) {
     slice_counter = 0;
   }
+}
+
+todo doc
+int delog(int value) {
+  static int half = 102;
+  if (value <= half) {
+    return value * 512 / half;
+  }
+  return (value - half) * 511 / (1023 - half) + 512;
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
