@@ -1,3 +1,21 @@
+/**
+ * SYSE
+X F0H 7FH 7FH 04H 01H 00H II F7H 
+ * Master volume (II=0 to 127, default 127)
+ */
+void sendMasterVolume(midi::DataByte volume) {
+  todo
+}
+
+/**
+ * Fine tune in cent BnH 65H 00H 64H 01H 06H vv
+ * vv
+=00 -100 vv=40H 0 vv=7FH +100
+ */
+void sendFineTune(int value, todo...) {
+  todo
+}
+
 struct Sound {
   midi::DataByte bank;
   midi::DataByte prognum;
