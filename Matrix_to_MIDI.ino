@@ -133,7 +133,8 @@ void loop() {
         volume_control_val = inval;
         inval /= 8;
         if (inval != volume_val) {
-          process(volume_knob, volume_val = inval, -1);
+          volume_val = inval;
+          // TODO process(volume_knob, volume_val = inval, -1);
           Serial.print("volume val "); Serial.println(volume_val);
         }
       }
@@ -145,7 +146,8 @@ void loop() {
         external_control_val = inval;
         inval /= 8;
         if (inval != external_val) {
-          process(ext_ctrl, external_val = inval, -1);
+          external_val = inval;
+          externalControl();
           //Serial.print("external val "); Serial.println(external_val);
         }
       }
@@ -324,7 +326,7 @@ void process(Event event, int value, int value2) {
         case note_off:
           if (split_position == no_key) {
             if (value < n_sounds) {
-              sendSound(sounds[value], channel, midi1);
+              sendSoundWithVolume(sounds[value], volume_val, channel, midi1);
               state = idle;
             }
           }
@@ -333,13 +335,13 @@ void process(Event event, int value, int value2) {
               // set left sound
               if (left_transpose == 0) {
                 if (value < n_bass_sounds) {
-                  sendSound(bass_sounds[value], channel, midi1);
+                  sendSoundWithVolume(bass_sounds[value], volume_val, channel, midi1);
                   state = idle;
                 }
               } 
               else {
                 if (value < n_sounds) {
-                  sendSound(sounds[value], channel, midi1);
+                  sendSoundWithVolume(sounds[value], volume_val, channel, midi1);
                   state = idle;
                 }
               }
@@ -347,8 +349,9 @@ void process(Event event, int value, int value2) {
             else {
               value -= right_sounds_start;
               if (value < n_right_layers) {
-                sendSound(right_layers[value]->right1, channel + 1, midi1);
-                sendSound(right_layers[value]->right2, channel + 2, midi1);
+                sendSoundWithVolume(right_layers[value]->right1, volume_val, channel + 1, midi1);
+                // 2nd sound controlled by expresssion pedal
+                sendSoundWithVolume(right_layers[value]->right2, 0, channel + 2, midi1);
                 state = idle;
               }
             }
@@ -532,6 +535,17 @@ void externalSwitch() {
     Serial.println("sustain off");
   }    
   #endif
+}
+
+void externalControl() {
+  if (split_position == no_key) {
+    // volume pedal
+    midi1.sendControlChange(midi::ChannelVolume, external_val*volume_val/MIDI_CONTROLLER_MAX, channel);
+  }
+  else {
+    // "expression" pedal controlling 2nd right sound
+    midi1.sendControlChange(midi::ChannelVolume, external_val*volume_val/MIDI_CONTROLLER_MAX, channel+2);
+  }
 }
 
 /*--------------------------------- event from matrix ---------------------------------*/
