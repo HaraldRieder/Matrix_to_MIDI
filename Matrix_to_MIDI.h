@@ -47,6 +47,16 @@ byte magnify(byte value) {
   return magnified;
 }
 
+/**
+ * Roughly linearizes analog values as delivered
+ * by an audio (logarithmic) potentiometer.
+ * The pseudo linearization is implemented as
+ * 2 sections of linear functions with different slopes.
+ * @value non-linear input 0..1023
+ * @return roughly linearized value 0..1023
+ */
+int delog(int value);
+
 /*--------------------------------- persistent settings ---------------------------------*/
 
 // the values in a fresh EEPROM
