@@ -133,9 +133,8 @@ void loop() {
         volume_control_val = inval;
         inval /= 8;
         if (inval != volume_val) {
-          volume_val = inval;
-          // TODO process(volume_knob, volume_val = inval, -1);
-          Serial.print("volume val "); Serial.println(volume_val);
+          sendMasterVolume(volume_val = inval, midi1);
+          //Serial.print("volume val "); Serial.println(volume_val);
         }
       }
       break;
@@ -147,8 +146,7 @@ void loop() {
         if (true) inval = delog(inval)/8; // for logarithmic/audio pedals
         else inval /= 8; // for linear pedals
         if (inval != external_val) {
-          external_val = inval;
-          externalControl();
+          externalControl(external_val = inval);
           //Serial.print("external val "); Serial.println(external_val);
         }
       }
@@ -205,13 +203,14 @@ void loop() {
   }
 }
 
-todo doc
 int delog(int value) {
-  static int half = 102;
+  static int half = 120;
   if (value <= half) {
-    return value * 512 / half;
+    //Serial.print("delog - ");Serial.print(value);Serial.print("->");Serial.println((long)value * 512 / half);
+    return (long)value * 512 / half;
   }
-  return (value - half) * 511 / (1023 - half) + 512;
+  //Serial.print("delog + ");Serial.print(value);Serial.print("->");Serial.println((long)(value - half) * 511 / (1023 - half) + 512);
+  return (long)(value - half) * 511 / (1023 - half) + 512;
 }
 
 /*--------------------------------- state event machine ---------------------------------*/
@@ -336,7 +335,13 @@ void process(Event event, int value, int value2) {
         case note_off:
           if (split_position == no_key) {
             if (value < n_sounds) {
-              sendSoundWithVolume(sounds[value], volume_val, channel, midi1);
+              sendSound(sounds[value], channel, midi1);
+              sendFineTune(0x40, channel, midi1);
+              sendFineTune(0x40, channel + 1, midi1);
+              sendFineTune(0x40, channel + 2, midi1);
+              sendCoarseTune(0x40, channel, midi1);
+              sendCoarseTune(0x40, channel + 1, midi1);
+              sendCoarseTune(0x40, channel + 2, midi1);
               state = idle;
             }
           }
@@ -345,23 +350,30 @@ void process(Event event, int value, int value2) {
               // set left sound
               if (left_transpose == 0) {
                 if (value < n_bass_sounds) {
-                  sendSoundWithVolume(bass_sounds[value], volume_val, channel, midi1);
+                  sendSound(bass_sounds[value], channel, midi1);
                   state = idle;
                 }
               } 
               else {
                 if (value < n_sounds) {
-                  sendSoundWithVolume(sounds[value], volume_val, channel, midi1);
+                  sendSound(sounds[value], channel, midi1);
                   state = idle;
                 }
               }
+              sendFineTune(0x38, channel, midi1);
+              sendCoarseTune(0x40, channel, midi1);
             }
             else {
               value -= right_sounds_start;
               if (value < n_right_layers) {
-                sendSoundWithVolume(right_layers[value]->right1, volume_val, channel + 1, midi1);
+                sendSound(right_layers[value]->right1, channel + 1, midi1);
+                sendFineTune(0x40, channel + 1, midi1);
+                sendCoarseTune(right_layers[value]->coarseTuneRight1, channel + 1, midi1);
                 // 2nd sound controlled by expresssion pedal
-                sendSoundWithVolume(right_layers[value]->right2, 0, channel + 2, midi1);
+                sendSound(right_layers[value]->right2, channel + 2, midi1);
+                sendFineTune(0x42, channel + 1, midi1);
+                sendCoarseTune(right_layers[value]->coarseTuneRight2, channel + 1, midi1);
+                sendVolume(0, channel + 2, midi1);
                 state = idle;
               }
             }
@@ -547,14 +559,14 @@ void externalSwitch() {
   #endif
 }
 
-void externalControl() {
+void externalControl(int value) {
   if (split_position == no_key) {
     // volume pedal
-    midi1.sendControlChange(midi::ChannelVolume, external_val*volume_val/MIDI_CONTROLLER_MAX, channel);
+    midi1.sendControlChange(midi::ChannelVolume, value, channel);
   }
   else {
     // "expression" pedal controlling 2nd right sound
-    midi1.sendControlChange(midi::ChannelVolume, external_val*volume_val/MIDI_CONTROLLER_MAX, channel+2);
+    midi1.sendControlChange(midi::ChannelVolume, value, channel+2);
   }
 }
 

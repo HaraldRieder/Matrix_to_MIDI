@@ -1,19 +1,52 @@
+static midi::DataByte buff[10];
+
 /**
- * SYSE
-X F0H 7FH 7FH 04H 01H 00H II F7H 
+ * SYSEX F0H 7FH 7FH 04H 01H 00H II F7H 
  * Master volume (II=0 to 127, default 127)
  */
-void sendMasterVolume(midi::DataByte volume) {
-  todo
+void sendMasterVolume(midi::DataByte volume,
+                      midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0x7f;
+  buff[1] = 0x7f;
+  buff[2] = 0x04;
+  buff[3] = 0x01;
+  buff[4] = 0x00;
+  buff[5] = volume;
+  interface.sendSysEx(6, buff);
+};
+
+/**
+ * Fine tune in cent BnH 65H 00H 64H 01H 06H vv
+ * vv=00 -100 vv=40H 0 vv=7FH +100
+ */
+void sendFineTune(midi::DataByte value, 
+                  midi::Channel channel, 
+                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xB0 + channel;
+  buff[1] = 0x65;
+  buff[2] = 0x00;
+  buff[3] = 0x64;
+  buff[4] = 0x01;
+  buff[5] = 0x06;
+  buff[6] = value;
+  interface.sendSysEx(7, buff, true);                    
 }
 
 /**
  * Fine tune in cent BnH 65H 00H 64H 01H 06H vv
- * vv
-=00 -100 vv=40H 0 vv=7FH +100
+ * vv=00 -100 vv=40H 0 vv=7FH +100
  */
-void sendFineTune(int value, todo...) {
-  todo
+void sendCoarseTune(midi::DataByte value, 
+                   midi::Channel channel, 
+                   midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xB0 + channel;
+  buff[1] = 0x65;
+  buff[2] = 0x00;
+  buff[3] = 0x64;
+  buff[4] = 0x02;
+  buff[5] = 0x06;
+  buff[6] = value;
+  interface.sendSysEx(7, buff, true);                    
 }
 
 struct Sound {
@@ -35,8 +68,8 @@ const struct Sound
   EBassFretless = { 3, 84, 100 }, SlapBass1 = { 3, 85, 100 }, SlapBass2 = { 3, 86, 100 },
   SynBass = { 2, 116, 100 }, JBassSoft = { 3, 121, 100 }, CSClassicBass = { 3, 122, 100 }, MOBassENV = { 3, 124, 100 },
   XBass1 = { 3, 125, 100 }, XBass2 = { 3, 126, 100 },
-  DiscoStringsLong = { 4, 16, 100 },
-  USTrumpTrombSection = { 5, 32, 100 },
+  DiscoStringsLong = { 4, 16, 100 }, StringsPWMA = { 4, 29, 100 },
+  USTrumpetSection = { 5, 32, 100 }, USTrumpTrombSection = { 5, 42, 100 },
   PopDrumKit = { 4, 120, 100 }, JazzDrumKit = { 4, 121, 100 }, OrchestraPercussion = { 4, 122, 100 }, VoiceKit = { 4, 123, 100 },
   NoSound = { 0, 127, 100 };
 
@@ -70,34 +103,33 @@ const Sound * bass_sounds[] = {
 };
 const int n_bass_sounds = sizeof(bass_sounds) / sizeof (bass_sounds[0]);
 
+void sendVolume(midi::DataByte volume, 
+                midi::Channel channel, 
+                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  interface.sendControlChange(midi::ChannelVolume, volume, channel);
+};
+
 void sendSound(const Sound * sound, 
                midi::Channel channel, 
                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-    interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
-    interface.sendProgramChange(sound->prognum, channel);
-    // reset all NRPNs
-    interface.sendControlChange(0x77, 0, channel);
+  interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
+  interface.sendProgramChange(sound->prognum, channel);
+  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
+  sendVolume(sound->volume, channel, interface);
 };
 
-void sendSoundWithVolume(const Sound * sound, int master_volume,
-                         midi::Channel channel, 
-                         midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  sendSound(sound, channel, interface);
-  interface.sendControlChange(midi::ChannelVolume, sound->volume*master_volume/MIDI_CONTROLLER_MAX, channel);
-};
-
-             
 struct RightLayer {
   const Sound * right1, * right2;
+  midi::DataByte coarseTuneRight1, coarseTuneRight2;
 };
 
 const struct RightLayer 
-  Jazz = { & GrandPianoHamburg, & USTrumpTrombSection },
-  Soul = { & MK1DynoTremolo, & DiscoStringsLong };
+  Jazz = { & GrandPianoHamburg, & USTrumpTrombSection, 0x40, 0x40 },
+  Ferryman = { & GPViennaLayeredPad, & USTrumpetSection, 0x40, 0x40 },
+  Soul = { & MK1Tremolo, & StringsPWMA, 0x40, 0x4C };
 
 const RightLayer * right_layers[] = {
-  & Jazz,
-  & Soul
+  & Jazz, & Ferryman, & Soul
 };
 
 const int n_right_layers = sizeof(right_layers) / sizeof (right_layers[0]);
