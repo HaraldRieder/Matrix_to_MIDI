@@ -365,14 +365,9 @@ void process(Event event, int value, int value2) {
             }
             else {
               value -= right_sounds_start;
-              if (value < n_right_layers) {
-                sendSound(right_layers[value]->right1, channel + 1, midi1);
-                sendFineTune(0x40, channel + 1, midi1);
-                sendCoarseTune(right_layers[value]->coarseTuneRight1, channel + 1, midi1);
+              if (value < n_registrations) {
+                sendRegistration(registrations[value], channel, midi1);
                 // 2nd sound controlled by expresssion pedal
-                sendSound(right_layers[value]->right2, channel + 2, midi1);
-                sendFineTune(0x42, channel + 1, midi1);
-                sendCoarseTune(right_layers[value]->coarseTuneRight2, channel + 1, midi1);
                 sendVolume(0, channel + 2, midi1);
                 state = idle;
               }
