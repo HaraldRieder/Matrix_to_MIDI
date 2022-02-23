@@ -53,33 +53,31 @@ void sendCoarseTune(midi::DataByte value,
 struct Sound {
   midi::DataByte bank;
   midi::DataByte prognum;
-  midi::DataByte volume; // difference from 100
-//  midi::DataByte pan; // difference from center position
-  midi::DataByte coarsetune; // difference from 0 [semitones]
-//  midi::DataByte finetune; // difference from 0 [cent]
-  midi::DataByte reverb; // difference from 64
-  midi::DataByte chorus; // difference from 64
-  midi::DataByte attack; // difference from 64
-  midi::DataByte decay;  // difference from 64
-  midi::DataByte release; // difference from 64
-  midi::DataByte cutoff; // difference from 64
-//  boolean mono; // 1 note only if true
 };
 
 const struct Sound 
+  GPViennaRock = { 0, 2 }, GPHamburgRock = { 0, 3 },
   GrandPianoVienna/*Bösendorfer*/ = { 0, 4 }, GrandPianoHamburg/*Steinway*/ = { 0, 5 }, 
   GPViennaLayeredPad = { 0, 16 }, GPHamburgLayeredPad = { 0, 17 }, 
   GPViennaLayeredStrings = { 0, 18 }, GPHamburgLayeredStrings = { 0, 19 },
+  GPViennaDream = { 0, 20 }, GPHamburgDream = { 0, 21 },
   MK1DynoTremolo/*Fender Rhodes*/ = { 0, 31 }, MK1DynoLayeredPad = { 0, 32 }, MK1Tremolo = { 0, 37 }, MK1LayeredFM = { 0, 39 },
-  A200Tremolo1/*Wurlitzer*/ = { 0, 41 }, FMPianoLayeredMKS = { 0, 5 }, V3BellaLayeredCortales = { 0, 54 },
+  A200 = { 0, 41 }, A200Tremolo1/*Wurlitzer*/ = { 0, 43 }, FMPianoLayeredMKS = { 0, 5 }, V3BellaLayeredCortales = { 0, 54 },
+  Organ776555678fast = { 1, 1 }, Organ800000568fast = { 1, 3 }, Organ008530000fast = { 1, 5 }, Organ807800000slow = { 1, 8 },
+  HammondFull = { 1, 20 },
+  DigitalPad = { 2, 1 }, Brightness = { 2, 5 }, FairlySpace = { 2, 14 }, IceRain = { 2, 21 }, 
+  VPhrase = { 2, 47 }, M12Brass = { 2, 64 }, Brazza = { 2, 71 },
   Harpsichord = { 3, 47 }, HarpsichordOctave = { 3, 48 },
   GuitarNylon = { 3, 22 }, GuitarNylonSoft = { 3, 23 }, GuitarSteel = { 3, 26 }, GuitarSteelSoft = { 3, 27 },
+  EGuitarClean = { 3, 43 }, EGuitarDistortion = { 3, 53 },
   HarpLong = { 3, 60 },
-  UprightJazzBass = { 3, 71 }, EBassUS1 = { 3, 79 }, EBassUS2 = { 3, 80 }, EBassPick = { 3, 82 }, EBassPickDark = { 3, 83 },
+  UprJazzBassVel96 = { 3, 67 }, UprightJazzBass = { 3, 71 }, EBassUS1 = { 3, 79 }, EBassUS2 = { 3, 80 }, EBassPick = { 3, 82 }, EBassPickDark = { 3, 83 },
   EBassFretless = { 3, 84 }, SlapBass1 = { 3, 85 }, SlapBass2 = { 3, 86 },
   SynBass = { 2, 116 }, JBassSoft = { 3, 121 }, CSClassicBass = { 3, 122 }, MOBassENV = { 3, 124 },
   XBass1 = { 3, 125 }, XBass2 = { 3, 126 },
-  DiscoStringsLong = { 4, 16 }, StringsPWMA = { 4, 29 },
+  Strings2Forte = { 4, 8 }, Strings3 = { 4, 13 }, 
+  DiscoStringsLong = { 4, 16 }, StringsPWMA = { 4, 29 }, StringsM12D = { 4, 42 },
+  ClassicChoirAahFilter = { 4, 65 },
   USTrumpetSection = { 5, 32 }, USTrumpTrombSection = { 5, 42 },
   PopDrumKit = { 4, 120 }, JazzDrumKit = { 4, 121 }, OrchestraPercussion = { 4, 122 }, VoiceKit = { 4, 123 },
   NoSound = { 0, 127 };
@@ -105,8 +103,7 @@ const int n_sounds = sizeof(sounds) / sizeof (sounds[0]);
 const Sound * bass_sounds[] = {
   & UprightJazzBass, & EBassUS1, 
   & EBassUS2, & EBassPick, 
-  & EBassPickDark,
-  & EBassFretless,
+  & EBassPickDark, & EBassFretless,
   & SlapBass1, & SlapBass2,
   & SynBass, & JBassSoft, 
   & CSClassicBass, & MOBassENV,
@@ -126,25 +123,63 @@ void sendSound(const Sound * sound,
   interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
   interface.sendProgramChange(sound->prognum, channel);
   interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
-  sendVolume(MIDI_CONTROLLER_MAX & (sound->volume + 100), channel, interface);
-  sendCoarseTune(MIDI_CONTROLLER_MAX & (sound->coarsetune + 100), channel + 1, interface);
-  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (sound->reverb + 64), channel);
-  interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & (sound->chorus + 64), channel);
-  interface.sendControlChange(midi::SoundController4, MIDI_CONTROLLER_MAX & (sound->attack + 64), channel);
-  interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (sound->decay + 64), channel);
-  interface.sendControlChange(midi::SoundController3, MIDI_CONTROLLER_MAX & (sound->release + 64), channel);
-  interface.sendControlChange(midi::SoundController5, MIDI_CONTROLLER_MAX & (sound->cutoff + 64), channel);
+};
+
+struct Preset {
+  const Sound & sound;
+  midi::DataByte volume; // difference from 100
+  midi::DataByte coarsetune; // difference from 0 [semitones]
+  midi::DataByte reverb; // difference from 64
+  midi::DataByte chorus; // abs. value
+  midi::DataByte attack; // difference from 64
+  midi::DataByte decay;  // difference from 64
+  midi::DataByte release; // difference from 64
+  midi::DataByte cutoff; // difference from 64
+//  midi::DataByte finetune; // difference from 0 [cent]
+//  midi::DataByte pan; // difference from center position
+//  boolean mono; // 1 note only if true
+};
+
+void sendPreset(const Preset * preset, 
+                midi::Channel channel, 
+                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  sendSound(&preset->sound, channel, interface);
+  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
+  sendVolume(MIDI_CONTROLLER_MAX & (preset->volume + 100), channel, interface);
+  sendCoarseTune(MIDI_CONTROLLER_MAX & (preset->coarsetune + 100), channel + 1, interface);
+  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (preset->reverb + 64), channel);
+  interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & preset->chorus, channel);
+  interface.sendControlChange(midi::SoundController4, MIDI_CONTROLLER_MAX & (preset->attack + 64), channel);
+  interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (preset->decay + 64), channel);
+  interface.sendControlChange(midi::SoundController3, MIDI_CONTROLLER_MAX & (preset->release + 64), channel);
+  interface.sendControlChange(midi::SoundController5, MIDI_CONTROLLER_MAX & (preset->cutoff + 64), channel);
   // TODO send the rest
 };
 
+
 struct Registration {
-  const Sound left, right1, right2;
+  const Preset left, right1, right2;
 };
 
+// TODO volumes, decays, releases all ok?
 const struct Registration  
-  ThatOleDevilCalledLove = Registration { Sound{UprightJazzBass}, Sound{GrandPianoHamburg}, Sound{USTrumpTrombSection} };
-//  DontPayTheFerryman = { & GPViennaLayeredPad, & USTrumpetSection, 0x40, 0x40 },
-//  Soul = { & MK1Tremolo, & StringsPWMA, 0x40, 0x4C };
+  AintNoSunshine = {  {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {MK1Tremolo}, {StringsPWMA} },
+  AllCriedOut = { {SynBass,0,0,0,0,0,0,10/*release*/}, {FairlySpace,-10}, {IceRain} },
+  Bedingungslos = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {GPViennaLayeredStrings,-10}, {VPhrase} },
+  CatchTheRainbow = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {ClassicChoirAahFilter} },
+  DontPayTheFerryman = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {Brazza} },
+  DontYouNeed = { {EBassFretless,15,0,0,0,0,0,18/*release*/}, {GuitarSteelSoft,-41}, {Brightness} },
+  LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {MK1DynoTremolo,-10}, {HammondFull} },
+  IchWillKeineSchokolade = { {UprJazzBassVel96,15,0,0,0,0,0,10/*release*/}, {Organ800000568fast,-55}, {USTrumpetSection} }, 
+  MeAndBobbyMcGee = { {EBassUS1,15,0,0,0,0,0,10/*release*/}, {Organ807800000slow,-41}, {Organ776555678fast} }, 
+  NieGenug = { {EBassUS1,15}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/} }, 
+  RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {GPHamburgDream}, {M12Brass} }, 
+  RollingInTheDeep = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {GPHamburgRock}, {Strings3,0,-12/*transpose*/} }, 
+  SummerDreaming = { {EBassFretless,15,0,0,0,0,10/*release*/}, {A200,-10,0,0,16/*chorus*/}, {Organ008530000fast} }, 
+  ThatOleDevilCalledLove = { {UprightJazzBass}, {GrandPianoHamburg}, {USTrumpTrombSection} },
+  ThisIsTheLife = { {EBassFretless,15,0,0,0,0,18/*decay*/}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/}, {Strings2Forte} },
+  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {GrandPianoHamburg,-5,0,1,14/*chorus*/,0,0,6/*release*/}, {Strings3} },
+  UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {StringsM12D,-41}, {DigitalPad,0,12} };
 
 const Registration * registrations[] = {
   & ThatOleDevilCalledLove//, & DontPayTheFerryman, & Soul
@@ -155,9 +190,9 @@ const int n_registrations = sizeof(registrations) / sizeof (registrations[0]);
 void sendRegistration(const Registration * registration, 
                  midi::Channel base_channel,
                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  sendSound(&registration->left  , base_channel    , interface);                 
-  sendSound(&registration->right1, base_channel + 1, interface);                 
-  sendSound(&registration->right2, base_channel + 2, interface);
+  sendPreset(&registration->left  , base_channel    , interface);                 
+  sendPreset(&registration->right1, base_channel + 1, interface);                 
+  sendPreset(&registration->right2, base_channel + 2, interface);
   sendFineTune(0x38, base_channel    , interface);
   sendFineTune(0x40, base_channel + 1, interface);
   sendFineTune(0x42, base_channel + 2, interface);
