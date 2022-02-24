@@ -19,7 +19,7 @@ const struct Sound
   VPhrase = { 2, 47 }, M12Brass = { 2, 64 }, Brazza = { 2, 71 },
   Harpsichord = { 3, 47 }, HarpsichordOctave = { 3, 48 },
   GuitarNylon = { 3, 22 }, GuitarNylonSoft = { 3, 23 }, GuitarSteel = { 3, 26 }, GuitarSteelSoft = { 3, 27 },
-  EGuitarClean = { 3, 43 }, EGuitarDistortion = { 3, 53 },
+  EGuitarClean = { 3, 43 }, EGuitarDistortion = { 3, 45 },
   HarpLong = { 3, 60 },
   UprJazzBassVel96 = { 3, 67 }, UprightJazzBass = { 3, 71 }, EBassUS1 = { 3, 79 }, EBassUS2 = { 3, 80 }, EBassPick = { 3, 82 }, EBassPickDark = { 3, 83 },
   EBassFretless = { 3, 84 }, SlapBass1 = { 3, 85 }, SlapBass2 = { 3, 86 },
