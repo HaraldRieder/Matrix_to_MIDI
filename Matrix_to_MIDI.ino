@@ -49,9 +49,9 @@ const int external_switch_pin = A0; // = F0 ATMega port+bit
 const int external_control_pin = A4; 
 int external_control_val = 1023; // 0..1023 analog value
 int external_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
-const int volume_control_pin = A5;
-int volume_control_val = 1023; // 0..1023 analog value
-int volume_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
+const int expre_control_pin = A5;
+int expre_control_val = 1023; // 0..1023 analog value
+int expre_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
 boolean black_button = false; // "up"
 boolean green_button = false; // "down"
 int external_switch = LOW;
@@ -127,14 +127,14 @@ void loop() {
       buttons(t);
       break;
     case 2:
-      inval = analogRead(volume_control_pin);
+      inval = analogRead(expre_control_pin);
       // if changed, with +-2 jitter suppression
-      if (inval > volume_control_val + 2 || inval < volume_control_val - 2) {
-        volume_control_val = inval;
+      if (inval > expre_control_val + 2 || inval < expre_control_val - 2) {
+        expre_control_val = inval;
         inval /= 8;
-        if (inval != volume_val) {
-          sendMasterVolume(volume_val = inval, midi1);
-          //Serial.print("volume val "); Serial.println(volume_val);
+        if (inval != expre_val) {
+          sendMasterVolume(expre_val = inval, midi1);
+          //Serial.print("volume val "); Serial.println(expre_val);
         }
       }
       break;
@@ -367,8 +367,12 @@ void process(Event event, int value, int value2) {
               value -= right_sounds_start;
               if (value < n_registrations) {
                 sendRegistration(registrations[value], channel, midi1);
+                midi1.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel);
+                midi1.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel + 1);
                 // 2nd sound controlled by expresssion pedal
-                sendVolume(0, channel + 2, midi1);
+                //sendVolume(0, channel + 2, midi1);
+                midi1.sendControlChange(midi::ChannelVolume, MIDI_CONTROLLER_MAX, channel + 2);
+                midi1.sendControlChange(midi::ExpressionController, 0, channel + 2);
                 state = idle;
               }
             }
@@ -557,11 +561,13 @@ void externalSwitch() {
 void externalControl(int value) {
   if (split_position == no_key) {
     // volume pedal
-    midi1.sendControlChange(midi::ChannelVolume, value, channel);
+    //midi1.sendControlChange(midi::ChannelVolume, value, channel);
+    midi1.sendControlChange(midi::ExpressionController, value, channel);
   }
   else {
     // "expression" pedal controlling 2nd right sound
-    midi1.sendControlChange(midi::ChannelVolume, value, channel+2);
+    //midi1.sendControlChange(midi::ChannelVolume, value, channel + 2);
+    midi1.sendControlChange(midi::ExpressionController, value, channel + 2);
   }
 }
 

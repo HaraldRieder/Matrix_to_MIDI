@@ -1,55 +1,5 @@
 static midi::DataByte buff[10];
 
-/**
- * SYSEX F0H 7FH 7FH 04H 01H 00H II F7H 
- * Master volume (II=0 to 127, default 127)
- */
-void sendMasterVolume(midi::DataByte volume,
-                      midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  buff[0] = 0x7f;
-  buff[1] = 0x7f;
-  buff[2] = 0x04;
-  buff[3] = 0x01;
-  buff[4] = 0x00;
-  buff[5] = volume;
-  interface.sendSysEx(6, buff);
-};
-
-/**
- * Fine tune in cent BnH 65H 00H 64H 01H 06H vv
- * vv=00 -100 vv=40H 0 vv=7FH +100
- */
-void sendFineTune(midi::DataByte value, 
-                  midi::Channel channel, 
-                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  buff[0] = 0xB0 + channel;
-  buff[1] = 0x65;
-  buff[2] = 0x00;
-  buff[3] = 0x64;
-  buff[4] = 0x01;
-  buff[5] = 0x06;
-  buff[6] = value;
-  interface.sendSysEx(7, buff, true);                    
-}
-
-/**
- * Coarse tune in half tones BnH 65H 00H 64H 02H 06H vv
- * vv=00 -64 vv=40H 0 vv=7FH +64
- */
-void sendCoarseTune(midi::DataByte value, 
-                   midi::Channel channel, 
-                   midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  buff[0] = 0xB0 + channel;
-  buff[1] = 0x65;
-  buff[2] = 0x00;
-  buff[3] = 0x64;
-  buff[4] = 0x02;
-  buff[5] = 0x06;
-  buff[6] = value;
-  interface.sendSysEx(7, buff, true);                    
-}
-
-// corresponds to 1 line of a V3 control registration
 struct Sound {
   midi::DataByte bank;
   midi::DataByte prognum;
@@ -111,20 +61,9 @@ const Sound * bass_sounds[] = {
 };
 const int n_bass_sounds = sizeof(bass_sounds) / sizeof (bass_sounds[0]);
 
-void sendVolume(midi::DataByte volume, 
-                midi::Channel channel, 
-                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  interface.sendControlChange(midi::ChannelVolume, volume, channel);
-};
-
-void sendSound(const Sound * sound, 
-               midi::Channel channel, 
-               midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
-  interface.sendProgramChange(sound->prognum, channel);
-  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
-};
-
+/** 
+ * corresponds to 1 line of a V3 Control registration
+ */
 struct Preset {
   const Sound & sound;
   midi::DataByte volume; // difference from 100
@@ -140,23 +79,9 @@ struct Preset {
 //  boolean mono; // 1 note only if true
 };
 
-void sendPreset(const Preset * preset, 
-                midi::Channel channel, 
-                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  sendSound(&preset->sound, channel, interface);
-  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
-  sendVolume(MIDI_CONTROLLER_MAX & (preset->volume + 100), channel, interface);
-  sendCoarseTune(MIDI_CONTROLLER_MAX & (preset->coarsetune + 100), channel + 1, interface);
-  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (preset->reverb + 64), channel);
-  interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & preset->chorus, channel);
-  interface.sendControlChange(midi::SoundController4, MIDI_CONTROLLER_MAX & (preset->attack + 64), channel);
-  interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (preset->decay + 64), channel);
-  interface.sendControlChange(midi::SoundController3, MIDI_CONTROLLER_MAX & (preset->release + 64), channel);
-  interface.sendControlChange(midi::SoundController5, MIDI_CONTROLLER_MAX & (preset->cutoff + 64), channel);
-  // TODO send the rest
-};
-
-
+/**
+ * corresponds to a V3 Control registration
+ */
 struct Registration {
   const Preset left, right1, right2;
 };
@@ -169,8 +94,8 @@ const struct Registration
   CatchTheRainbow = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {ClassicChoirAahFilter} },
   DontPayTheFerryman = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {Brazza} },
   DontYouNeed = { {EBassFretless,15,0,0,0,0,0,18/*release*/}, {GuitarSteelSoft,-41}, {Brightness} },
-  LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {MK1DynoTremolo,-10}, {HammondFull} },
   IchWillKeineSchokolade = { {UprJazzBassVel96,15,0,0,0,0,0,10/*release*/}, {Organ800000568fast,-55}, {USTrumpetSection} }, 
+  LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {MK1DynoTremolo,-10}, {HammondFull} },
   MeAndBobbyMcGee = { {EBassUS1,15,0,0,0,0,0,10/*release*/}, {Organ807800000slow,-41}, {Organ776555678fast} }, 
   NieGenug = { {EBassUS1,15}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/} }, 
   RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {GPHamburgDream}, {M12Brass} }, 
@@ -182,10 +107,94 @@ const struct Registration
   UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {StringsM12D,-41}, {DigitalPad,0,12} };
 
 const Registration * registrations[] = {
-  & ThatOleDevilCalledLove//, & DontPayTheFerryman, & Soul
+  & AintNoSunshine, & AllCriedOut,
+  & Bedingungslos,
+  & CatchTheRainbow,
+  & DontPayTheFerryman, & DontYouNeed,
+  & LetItRain,
+  & IchWillKeineSchokolade,
+  & MeAndBobbyMcGee,
+  & NieGenug,
+  & RideLikeTheWind, & RollingInTheDeep,
+  & SummerDreaming,
+  & ThatOleDevilCalledLove, & ThisIsTheLife, & ThisMasquerade,
+  & UnderneathYourClothes
 };
 
 const int n_registrations = sizeof(registrations) / sizeof (registrations[0]);
+
+/**
+ * SYSEX F0H 7FH 7FH 04H 01H 00H II F7H 
+ * Master volume (II=0 to 127, default 127)
+ */
+void sendMasterVolume(midi::DataByte volume,
+                      midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0x7f;
+  buff[1] = 0x7f;
+  buff[2] = 0x04;
+  buff[3] = 0x01;
+  buff[4] = 0x00;
+  buff[5] = volume;
+  interface.sendSysEx(6, buff);
+};
+
+/**
+ * Fine tune in cent BnH 65H 00H 64H 01H 06H vv
+ * vv=00 -100 vv=40H 0 vv=7FH +100
+ */
+void sendFineTune(midi::DataByte value, 
+                  midi::Channel channel, 
+                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xB0 + channel;
+  buff[1] = 0x65;
+  buff[2] = 0x00;
+  buff[3] = 0x64;
+  buff[4] = 0x01;
+  buff[5] = 0x06;
+  buff[6] = value;
+  interface.sendSysEx(7, buff, true);                    
+}
+
+/**
+ * Coarse tune in half tones BnH 65H 00H 64H 02H 06H vv
+ * vv=00 -64 vv=40H 0 vv=7FH +64
+ */
+void sendCoarseTune(midi::DataByte value, 
+                   midi::Channel channel, 
+                   midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xB0 + channel;
+  buff[1] = 0x65;
+  buff[2] = 0x00;
+  buff[3] = 0x64;
+  buff[4] = 0x02;
+  buff[5] = 0x06;
+  buff[6] = value;
+  interface.sendSysEx(7, buff, true);                    
+}
+
+void sendSound(const Sound * sound, 
+               midi::Channel channel, 
+               midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
+  interface.sendProgramChange(sound->prognum, channel);
+  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
+};
+
+void sendPreset(const Preset * preset, 
+                midi::Channel channel, 
+                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  sendSound(&preset->sound, channel, interface);
+  interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
+  interface.sendControlChange(midi::ChannelVolume, MIDI_CONTROLLER_MAX & (preset->volume + 100), channel);
+  sendCoarseTune(MIDI_CONTROLLER_MAX & (preset->coarsetune + 64), channel, interface);
+  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (preset->reverb + 64), channel);
+  interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & preset->chorus, channel);
+  interface.sendControlChange(midi::SoundController4, MIDI_CONTROLLER_MAX & (preset->attack + 64), channel);
+  interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (preset->decay + 64), channel);
+  interface.sendControlChange(midi::SoundController3, MIDI_CONTROLLER_MAX & (preset->release + 64), channel);
+  interface.sendControlChange(midi::SoundController5, MIDI_CONTROLLER_MAX & (preset->cutoff + 64), channel);
+  // TODO send the rest
+};
 
 void sendRegistration(const Registration * registration, 
                  midi::Channel base_channel,
