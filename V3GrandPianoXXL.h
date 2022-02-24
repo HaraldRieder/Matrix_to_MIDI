@@ -15,7 +15,7 @@ const struct Sound
   A200 = { 0, 41 }, A200Tremolo1/*Wurlitzer*/ = { 0, 43 }, FMPianoLayeredMKS = { 0, 5 }, V3BellaLayeredCortales = { 0, 54 },
   Organ776555678fast = { 1, 1 }, Organ800000568fast = { 1, 3 }, Organ008530000fast = { 1, 5 }, Organ807800000slow = { 1, 8 },
   HammondFull = { 1, 20 },
-  DigitalPad = { 2, 1 }, Brightness = { 2, 5 }, FairlySpace = { 2, 14 }, IceRain = { 2, 21 }, 
+  DigitalPad = { 2, 1 }, Brightness = { 2, 5 }, FairlySpace = { 2, 14 }, IceRain = { 2, 21 },  IceRain = { 2, 45 }, 
   VPhrase = { 2, 47 }, M12Brass = { 2, 64 }, Brazza = { 2, 71 },
   Harpsichord = { 3, 47 }, HarpsichordOctave = { 3, 48 },
   GuitarNylon = { 3, 22 }, GuitarNylonSoft = { 3, 23 }, GuitarSteel = { 3, 26 }, GuitarSteelSoft = { 3, 27 },
@@ -88,8 +88,8 @@ struct Registration {
 
 // TODO volumes, decays, releases all ok?
 const struct Registration  
-  AintNoSunshine = {  {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {MK1Tremolo}, {StringsPWMA} },
-  AllCriedOut = { {SynBass,0,0,0,0,0,0,10/*release*/}, {FairlySpace,-10}, {IceRain} },
+  AintNoSunshine = {  {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {MK1Tremolo,-10}, {StringsPWMA} },
+  AllCriedOut = { {SynBass,0,0,0,0,0,0,10/*release*/}, {FairlySpace,-10}, {Ice} },
   Bedingungslos = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {GPViennaLayeredStrings,-10}, {VPhrase} },
   CatchTheRainbow = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {ClassicChoirAahFilter} },
   DontPayTheFerryman = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {Brazza} },
