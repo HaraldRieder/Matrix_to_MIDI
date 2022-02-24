@@ -103,8 +103,8 @@ const struct Registration
   SummerDreaming = { {EBassFretless,15,0,0,0,0,10/*release*/}, {A200,-10,0,0,16/*chorus*/}, {Organ008530000fast} }, 
   ThatOleDevilCalledLove = { {UprightJazzBass}, {GrandPianoHamburg}, {USTrumpTrombSection} },
   ThisIsTheLife = { {EBassFretless,15,0,0,0,0,18/*decay*/}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/}, {Strings2Forte} },
-  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {GrandPianoHamburg,-5,0,1,14/*chorus*/,0,0,6/*release*/}, {Strings3} },
-  UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {StringsM12D,-41}, {DigitalPad,0,12} };
+  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {GrandPianoHamburg,-5}, {Strings3} },
+  UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {StringsM12D,-41}, {DigitalPad,0,12,0,0,0,8/*release*/} };
 
 const Registration * registrations[] = {
   & AintNoSunshine, & AllCriedOut,
