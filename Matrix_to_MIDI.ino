@@ -49,9 +49,9 @@ const int external_switch_pin = A0; // = F0 ATMega port+bit
 const int external_control_pin = A4; 
 int external_control_val = 1023; // 0..1023 analog value
 int external_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
-const int expre_control_pin = A5;
-int expre_control_val = 1023; // 0..1023 analog value
-int expre_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
+const int volume_control_pin = A5;
+int volume_control_val = 1023; // 0..1023 analog value
+int volume_val = MIDI_CONTROLLER_MAX; // 0..127 MIDI value
 boolean black_button = false; // "up"
 boolean green_button = false; // "down"
 int external_switch = LOW;
@@ -127,14 +127,14 @@ void loop() {
       buttons(t);
       break;
     case 2:
-      inval = analogRead(expre_control_pin);
+      inval = analogRead(volume_control_pin);
       // if changed, with +-2 jitter suppression
-      if (inval > expre_control_val + 2 || inval < expre_control_val - 2) {
-        expre_control_val = inval;
+      if (inval > volume_control_val + 2 || inval < volume_control_val - 2) {
+        volume_control_val = inval;
         inval /= 8;
-        if (inval != expre_val) {
-          sendMasterVolume(expre_val = inval, midi1);
-          //Serial.print("volume val "); Serial.println(expre_val);
+        if (inval != volume_val) {
+          sendMasterVolume(volume_val = inval, midi1);
+          //Serial.print("volume val "); Serial.println(volume_val);
         }
       }
       break;
@@ -607,7 +607,7 @@ void handleKeyDownEvent(byte key, int t_raw) {
     if (state != wait_for_split && state != wait_for_preset) {
       midi1.sendNoteOn(note, velocities[t], chan);
       if (duplicate) {
-        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D, which part of the dual sounds is controlled by expression controller
+        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D: this part of the dual sounds is controlled by expression controller
       }
     }
     #ifdef DEBUG_VELOCITY
