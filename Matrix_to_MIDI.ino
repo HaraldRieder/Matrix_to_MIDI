@@ -367,12 +367,6 @@ void process(Event event, int value, int value2) {
               value -= right_sounds_start;
               if (value < n_registrations) {
                 sendRegistration(registrations[value], channel, midi1);
-                midi1.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel);
-                midi1.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel + 1);
-                // 2nd sound controlled by expresssion pedal
-                //sendVolume(0, channel + 2, midi1);
-                midi1.sendControlChange(midi::ChannelVolume, MIDI_CONTROLLER_MAX, channel + 2);
-                midi1.sendControlChange(midi::ExpressionController, 0, channel + 2);
                 state = idle;
               }
             }
@@ -560,14 +554,11 @@ void externalSwitch() {
 
 void externalControl(int value) {
   if (split_position == no_key) {
-    // volume pedal
-    //midi1.sendControlChange(midi::ChannelVolume, value, channel);
     midi1.sendControlChange(midi::ExpressionController, value, channel);
   }
   else {
-    // "expression" pedal controlling 2nd right sound
-    //midi1.sendControlChange(midi::ChannelVolume, value, channel + 2);
-    midi1.sendControlChange(midi::ExpressionController, value, channel + 2);
+    // expression pedal controlling 1st right sound
+    midi1.sendControlChange(midi::ExpressionController, value, channel + 1);
   }
 }
 
@@ -607,7 +598,7 @@ void handleKeyDownEvent(byte key, int t_raw) {
     if (state != wait_for_split && state != wait_for_preset) {
       midi1.sendNoteOn(note, velocities[t], chan);
       if (duplicate) {
-        midi1.sendNoteOn(note, velocities[t], chan + 1); // this is for my Juno-D: this part of the dual sounds is controlled by expression controller
+        midi1.sendNoteOn(note, velocities[t], chan + 1); 
       }
     }
     #ifdef DEBUG_VELOCITY
@@ -622,7 +613,7 @@ void handleKeyDownEvent(byte key, int t_raw) {
 void handleKeyUpEvent(byte key) {
     midi::DataByte note = key + A;
     byte chan;
-    boolean duplicate = false;
+    boolean layered = false;
     if (split_position == no_key) {
       chan = channel;
     } 
@@ -635,11 +626,11 @@ void handleKeyUpEvent(byte key) {
       // right section
       chan = channel + 1;
       note -= split_position >= 12 ? 12 : 0;
-      duplicate = true;
+      layered = true;
     }
     chan &= 0xf;
     midi1.sendNoteOff(note, DefaultVelocity, chan);
-    if (duplicate) {
+    if (layered) {
       midi1.sendNoteOff(note, DefaultVelocity, chan + 1);
     }
     if (state != idle) {

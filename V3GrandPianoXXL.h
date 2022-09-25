@@ -88,23 +88,23 @@ struct Registration {
 
 // TODO volumes, decays, releases all ok?
 const struct Registration  
-  AintNoSunshine = {  {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {MK1Tremolo,-10}, {StringsPWMA} },
-  AllCriedOut = { {SynBass,0,0,0,0,0,0,10/*release*/}, {FairlySpace,-10}, {Ice} },
-  Bedingungslos = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {GPViennaLayeredStrings,-10}, {VPhrase} },
-  CatchTheRainbow = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {ClassicChoirAahFilter} },
-  DontPayTheFerryman = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {GPHamburgLayeredPad,-10}, {Brazza} },
-  DontYouNeed = { {EBassFretless,15,0,0,0,0,0,18/*release*/}, {GuitarSteelSoft,-41}, {Brightness} },
-  IchWillKeineSchokolade = { {UprJazzBassVel96,15,0,0,0,0,0,10/*release*/}, {Organ800000568fast,-55}, {USTrumpetSection} }, 
-  LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {MK1DynoTremolo,-10}, {HammondFull} },
-  MeAndBobbyMcGee = { {EBassUS1,15,0,0,0,0,0,10/*release*/}, {Organ807800000slow,-41}, {Organ776555678fast} }, 
-  NieGenug = { {EBassUS1,15}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/} }, 
-  RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {GPHamburgDream}, {M12Brass} }, 
-  RollingInTheDeep = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {GPHamburgRock}, {Strings3,0,-12/*transpose*/} }, 
-  SummerDreaming = { {EBassFretless,15,0,0,0,0,10/*release*/}, {A200,-10,0,0,16/*chorus*/}, {Organ008530000fast} }, 
-  ThatOleDevilCalledLove = { {UprightJazzBass}, {GrandPianoHamburg}, {USTrumpTrombSection} },
-  ThisIsTheLife = { {EBassFretless,15,0,0,0,0,18/*decay*/}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/}, {Strings2Forte} },
-  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {GrandPianoHamburg,-5}, {Strings3} },
-  UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {StringsM12D,-41}, {DigitalPad,0,12,0,0,0,8/*release*/} };
+  AintNoSunshine = {  {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {StringsPWMA}, {MK1Tremolo,-10} },
+  AllCriedOut = { {SynBass,0,0,0,0,0,0,10/*release*/}, {Ice}, {FairlySpace,-10} },
+  Bedingungslos = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {VPhrase}, {GPViennaLayeredStrings,-10} },
+  CatchTheRainbow = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {ClassicChoirAahFilter}, {GPHamburgLayeredPad,-10} },
+  DontPayTheFerryman = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {Brazza}, {GPHamburgLayeredPad,-10} },
+  DontYouNeed = { {EBassFretless,15,0,0,0,0,0,18/*release*/}, {Brightness}, {GuitarSteelSoft,-41} },
+  IchWillKeineSchokolade = { {UprJazzBassVel96,15,0,0,0,0,0,10/*release*/}, {USTrumpetSection}, {Organ800000568fast,-55} }, 
+  LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {HammondFull}, {MK1DynoTremolo,-10} },
+  MeAndBobbyMcGee = { {EBassUS1,15,0,0,0,0,0,10/*release*/}, {Organ776555678fast}, {Organ807800000slow,-41} }, 
+  NieGenug = { {EBassUS1,15}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/} }, 
+  RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream} }, 
+  RollingInTheDeep = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock} }, 
+  SummerDreaming = { {EBassFretless,15,0,0,0,0,10/*release*/}, {Organ008530000fast}, {A200,-10,0,0,16/*chorus*/} }, 
+  ThatOleDevilCalledLove = { {UprightJazzBass}, {USTrumpTrombSection}, {GrandPianoHamburg} },
+  ThisIsTheLife = { {EBassFretless,15,0,0,0,0,18/*decay*/}, {Strings2Forte}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/} },
+  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-5} },
+  UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {DigitalPad,0,12,0,0,0,8/*release*/}, {StringsM12D,-41} };
 
 const Registration * registrations[] = {
   & AintNoSunshine, & AllCriedOut,
@@ -186,6 +186,7 @@ void sendPreset(const Preset * preset,
   sendSound(&preset->sound, channel, interface);
   interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
   interface.sendControlChange(midi::ChannelVolume, MIDI_CONTROLLER_MAX & (preset->volume + 100), channel);
+  interface.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel); // reset expression value
   sendCoarseTune(MIDI_CONTROLLER_MAX & (preset->coarsetune + 64), channel, interface);
   interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (preset->reverb + 64), channel);
   interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & preset->chorus, channel);
