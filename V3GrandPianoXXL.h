@@ -98,12 +98,12 @@ const struct Registration
   LetItRain = { {EBassUS2,15,0,0,0,0,0,10/*release*/}, {HammondFull}, {MK1DynoTremolo,-10} },
   MeAndBobbyMcGee = { {EBassUS1,15,0,0,0,0,0,10/*release*/}, {Organ776555678fast}, {Organ807800000slow,-41} }, 
   NieGenug = { {EBassUS1,15}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/} }, 
-  RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream} }, 
-  RollingInTheDeep = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock} }, 
+  RideLikeTheWind = { {MOBassENV,0,0,0,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream, -10} }, 
+  RollingInTheDeep = { {EBassPickDark,15,0,0,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock, -10} }, 
   SummerDreaming = { {EBassFretless,15,0,0,0,0,10/*release*/}, {Organ008530000fast}, {A200,-10,0,0,16/*chorus*/} }, 
-  ThatOleDevilCalledLove = { {UprightJazzBass}, {USTrumpTrombSection}, {GrandPianoHamburg} },
+  ThatOleDevilCalledLove = { {UprightJazzBass,15}, {USTrumpTrombSection}, {GrandPianoHamburg,-10} },
   ThisIsTheLife = { {EBassFretless,15,0,0,0,0,18/*decay*/}, {Strings2Forte}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/} },
-  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-5} },
+  ThisMasquerade = { {UprightJazzBass,15,0,0,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-10} },
   UnderneathYourClothes = { {EBassFretless,15,0,0,0,0,18/*release*/}, {DigitalPad,0,12,0,0,0,8/*release*/}, {StringsM12D,-41} };
 
 const Registration * registrations[] = {
