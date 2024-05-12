@@ -237,6 +237,7 @@ void process(Event event, int value, int value2) {
     case down_long:  Serial.println("down long");  break;
     case up_short:   Serial.println("up short");   break;
     case down_short: Serial.println("down short"); break;
+    case both:       Serial.println("both");       break;
     case note_on:    Serial.println("note on");    break;
     case note_off:   Serial.println("note off");   break;
     case toggle_led: Serial.println("toggle led"); break;
@@ -271,40 +272,33 @@ void process(Event event, int value, int value2) {
           display(meter_max);
           return;
         case up_short: 
-        case down_short:
-          if (black_button || green_button) {
-            // after falling edge still another button pressed, 
-            // both must have been pressed together
-            if (split_position == no_key) {
-              state = wait_for_split;
+          if (split_position != no_key) {
+            // toggle left transpose
+            digitalWrite(meter_led_pin, LOW);
+            if (left_transpose == 0) {
+              left_transpose = 12;
+              display(meter_max);
             }
             else {
-              // back to normal mode (no split)
-              state = idle;
-            }
-            split_position = no_key;
-            return;
-          }
-          if (event == up_short) {
-            if (split_position != no_key) {
-              // toggle left transpose
-              digitalWrite(meter_led_pin, LOW);
-              if (left_transpose == 0) {
-                left_transpose = 12;
-                display(meter_max);
-              } 
-              else {
-                left_transpose = 0;
-                display(0);
-              }
-              delay(1500);
-              digitalWrite(meter_led_pin, HIGH);
+              left_transpose = 0;
               display(0);
             }
+            delay(1500);
+            digitalWrite(meter_led_pin, HIGH);
+            display(0);
+          }
+          return;
+        case down_short:
+          state = wait_for_preset;
+          return;
+        case both:
+          if (split_position == no_key) {
+            state = wait_for_split;
           }
           else {
-            state = wait_for_preset;  
+            split_position = no_key;
           }
+          return;
       }
       return;
       
@@ -317,15 +311,9 @@ void process(Event event, int value, int value2) {
           PORTF |= 0x04;
           keyboard_led_on = true;
           return;
-        case up_short: 
-        case down_short:
-          if (black_button || green_button) {
-            // after falling edge still another button pressed, 
-            // both must have been pressed together
-            // back to normal mode (no split)
-            state = idle;
-            split_position = no_key;
-          }
+        case both:
+          state = idle;
+          split_position = no_key;
           return;
       }
       return;
@@ -458,11 +446,11 @@ void process(Event event, int value, int value2) {
 
 /*--------------------------------- push-buttons ---------------------------------*/
 
-unsigned long last_switch_time;
 const unsigned long long_time = 2500; 
 
 void buttons(unsigned long t_millis) {
   static boolean discard_next_short = false;
+  static unsigned long last_switch_time;
   
   //int val = digitalRead(rocker_switch_1_pin);
   int val = PINA & 0b01;
@@ -480,13 +468,18 @@ void buttons(unsigned long t_millis) {
     }
   }
   else if (black_button) {
-    // falling edge
+    // black/up button released
     black_button = false;
     if (discard_next_short) {
       discard_next_short = false;
     }
     else if (t_millis <= last_switch_time + long_time) {
-      process(up_short, -1, -1);
+      if (green_button) {
+        process(both, -1, -1);
+        discard_next_short = true;
+      } else {
+        process(up_short, -1, -1);
+      }
     }
   }
   //val = digitalRead(rocker_switch_2_pin);
@@ -505,13 +498,18 @@ void buttons(unsigned long t_millis) {
     }
   }
   else if (green_button) {
-    // falling edge
+    // green/down button released
     green_button = false;
     if (discard_next_short) {
       discard_next_short = false;
     }
     else if (t_millis <= last_switch_time + long_time) {
-      process(down_short, -1, -1);
+      if (black_button) {
+        process(both, -1, -1);
+        discard_next_short = true;
+      } else {
+        process(down_short, -1, -1);
+      }
     }
   }
 }
