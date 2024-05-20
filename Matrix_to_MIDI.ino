@@ -330,6 +330,7 @@ void process(Event event, int value, int value2) {
               sendCoarseTune(0x40, channel, midi1);
               sendCoarseTune(0x40, channel + 1, midi1);
               sendCoarseTune(0x40, channel + 2, midi1);
+              externalControl(external_val);
               state = idle;
             }
           }
@@ -355,6 +356,7 @@ void process(Event event, int value, int value2) {
               value -= right_sounds_start;
               if (value < n_registrations) {
                 sendRegistration(registrations[value], channel, midi1);
+                externalControl(external_val);
                 state = idle;
               }
             }

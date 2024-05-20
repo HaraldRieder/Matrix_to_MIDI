@@ -12,7 +12,7 @@ const struct Sound
   GPViennaLayeredStrings = { 0, 18 }, GPHamburgLayeredStrings = { 0, 19 },
   GPViennaDream = { 0, 20 }, GPHamburgDream = { 0, 21 },
   MK1DynoTremolo/*Fender Rhodes*/ = { 0, 31 }, MK1DynoLayeredPad = { 0, 32 }, MK1Tremolo = { 0, 37 }, MK1LayeredFM = { 0, 39 },
-  A200 = { 0, 41 }, A200Tremolo1/*Wurlitzer*/ = { 0, 43 }, FMPianoLayeredMKS = { 0, 5 }, V3BellaLayeredCortales = { 0, 54 },
+  A200 = { 0, 41 }, A200Tremolo1/*Wurlitzer*/ = { 0, 43 }, FMPianoLayeredMKS = { 0, 23 }, V3BellaLayeredCortales = { 0, 54 },
   Organ776555678fast = { 1, 1 }, Organ800000568fast = { 1, 3 }, Organ008530000fast = { 1, 5 }, Organ807800000slow = { 1, 8 },
   HammondFull = { 1, 20 },
   DigitalPad = { 2, 1 }, Brightness = { 2, 5 }, FairlySpace = { 2, 14 }, IceRain = { 2, 21 },  Ice = { 2, 45 }, 
