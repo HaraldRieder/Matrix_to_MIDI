@@ -145,6 +145,7 @@ Wird bei blinkender LED eine Taste gewählt, die einen Sound auswählt (linke Ta
 #### Einschalten, Justieren, Split festlegen
 Nach dem Einschalten wird nach einigen Sekunden der _Normalzustand_ `playing` erreicht. Alle anderen Zustände wird man nur von Zeit zu Zeit besuchen.
 <p align="center"><img src="statediagram1.png"/></p>
+
 #### Transponieren und Sound/Preset auswählen
 `playing` ist identisch mit dem bereits erwähnten Normalzustand. Um das obige Diagramm nicht zu überfrachten, wurde dieses weitere Diagramm erstellt.
 <p align="center"><img src="statediagram2.png"/></p>
