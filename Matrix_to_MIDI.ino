@@ -66,7 +66,7 @@ void setup() {
   pinMode(keyboard_led_pin, OUTPUT);
   digitalWrite(keyboard_led_pin, HIGH);
   
-  // user has 2.5 seconds (re-triggerable timer) to adjust MIDI channel
+  // user has 5 seconds (re-triggerable timer) to adjust MIDI channel
   digitalWrite(meter_led_pin, LOW);
   channel = readCodingSwitchValue(A1) + 1; // 0=omni, 1..16 are individual channels, 17=off
   displayChannel(channel);
@@ -81,6 +81,7 @@ void setup() {
   } 
   digitalWrite(meter_led_pin, HIGH);
   display(0);
+  // V3 XXL needs these 5 seconds to get ready!
   
   setupMatrixPins();
 
@@ -88,6 +89,7 @@ void setup() {
   initVelocities(global_sens_to_exponent(settings.sensitivity));
 
   midi1.begin(1/*dummy input channel*/);
+  sendReset(midi1);
   
   // disable timers / avoid jitter
   //TIMSK0 = 0; leave timer 0 enabled so that we still have delay() and millis() but not tone()

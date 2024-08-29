@@ -83,29 +83,29 @@ struct Preset {
  * corresponds to a V3 Control registration
  */
 struct Registration {
+  const midi::DataByte reverbType, effectType;
   const Preset left, right1, right2;
 };
 
-// TODO volumes, decays, releases all ok?
 const struct Registration  
-  AintNoSunshine = {  {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {StringsPWMA}, {MK1Tremolo,-10} },
-  AllCriedOut = { {SynBass,0,0,-50,0,0,0,10/*release*/}, {Ice}, {FairlySpace,-10} },
-  Bedingungslos = { {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {VPhrase}, {GPViennaLayeredStrings,-10} },
-  CatchTheRainbow = { {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {ClassicChoirAahFilter}, {GPHamburgLayeredPad,-10} },
-  DontPayTheFerryman = { {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {Brazza}, {GPHamburgLayeredPad,-10} },
-  DontYouNeed = { {EBassFretless,15,0,-30,0,0,0,18/*release*/}, {Brightness}, {GuitarSteelSoft,-41} },
-  IchWillKeineSchokolade = { {UprJazzBassVel96,15,0,-50,0,0,0,10/*release*/}, {USTrumpetSection}, {Organ800000568fast,-55} }, 
-  LetItRain = { {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {HammondFull}, {MK1DynoTremolo,-10} },
-  MeAndBobbyMcGee = { {EBassUS1,15,0,-50,0,0,0,10/*release*/}, {Organ776555678fast}, {Organ807800000slow,-41} }, 
-  NieGenug = { {EBassUS1,15,0,-50}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/} }, 
-  RideLikeTheWind = { {MOBassENV,0,0,-50,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream, -10} }, 
-  RollingInTheDeep = { {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock, -10} }, 
-  SummerDreaming = { {EBassFretless,15,0,-50,0,0,10/*release*/}, {Organ008530000fast}, {A200,-10,0,0,16/*chorus*/} }, 
-  ThatOleDevilCalledLove = { {UprightJazzBass,15,0,-50}, {USTrumpTrombSection}, {GrandPianoHamburg,-10} },
-  ThisIsTheLife = { {EBassFretless,15,0,-50,0,0,18/*decay*/}, {Strings2Forte}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/} },
-  ThisMasquerade = { {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-10} },
-  UnderneathYourClothes = { {EBassFretless,15,0,-50,0,0,18/*release*/}, {DigitalPad,0,12,0,0,0,8/*release*/}, {StringsM12D,-41} },
-  AintNobody = { {SynBass,7,0,-50,0,0,18/*release*/}, {OBLeadBPF24,27,0,14}, {MK1DynoLayeredFM,-32} };
+  AintNoSunshine = { 1,0, {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {StringsPWMA}, {MK1Tremolo,-10} },
+  AllCriedOut = { 1,0, {SynBass,0,0,-50,0,0,0,10/*release*/}, {Ice}, {FairlySpace,-10} },
+  Bedingungslos = { 1,0, {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {VPhrase}, {GPViennaLayeredStrings,-10} },
+  CatchTheRainbow = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {ClassicChoirAahFilter}, {GPHamburgLayeredPad,-10} },
+  DontPayTheFerryman = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {Brazza}, {GPHamburgLayeredPad,-10} },
+  DontYouNeed = { 1,0, {EBassFretless,15,0,-30,0,0,0,18/*release*/}, {Brightness}, {GuitarSteelSoft,-41} },
+  IchWillKeineSchokolade = { 1,0, {UprJazzBassVel96,15,0,-50,0,0,0,10/*release*/}, {USTrumpetSection}, {Organ800000568fast,-55} }, 
+  LetItRain = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {HammondFull}, {MK1DynoTremolo,-10} },
+  MeAndBobbyMcGee = { 1,0, {EBassUS1,15,0,-50,0,0,0,10/*release*/}, {Organ776555678fast}, {Organ807800000slow,-41} }, 
+  NieGenug = { 1,0, {EBassUS1,15,0,-50}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/} }, 
+  RideLikeTheWind = { 1,0, {MOBassENV,0,0,-50,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream, -10} }, 
+  RollingInTheDeep = { 1,0, {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock, -10} }, 
+  SummerDreaming = { 1,0, {EBassFretless,15,0,-50,0,0,10/*release*/}, {Organ008530000fast}, {A200,-10,0,0,16/*chorus*/} }, 
+  ThatOleDevilCalledLove = { 1,0, {UprightJazzBass,15,0,-50}, {USTrumpTrombSection}, {GrandPianoHamburg,-10} },
+  ThisIsTheLife = { 1,0, {EBassFretless,15,0,-50,0,0,18/*decay*/}, {Strings2Forte}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/} },
+  ThisMasquerade = { 1,0, {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-10} },
+  UnderneathYourClothes = { 1,0, {EBassFretless,15,0,-50,0,0,18/*release*/}, {DigitalPad,0,12,0,0,0,8/*release*/}, {StringsM12D,-41} },
+  AintNobody = { 1,0, {SynBass,7,0,-50,0,0,18/*release*/}, {OBLeadBPF24,27,0,14}, {MK1DynoLayeredFM,-32} };
 
 const Registration * registrations[] = {
   & AintNoSunshine, & AllCriedOut,
@@ -124,6 +124,91 @@ const Registration * registrations[] = {
 };
 
 const int n_registrations = sizeof(registrations) / sizeof (registrations[0]);
+
+enum GlobalNRPN {
+  MainEQLowGain = 0x08, 
+  MainEQLowMidGain = 0x09, 
+  MainEQHighMidGain = 0x0A, 
+  MainEQHighGain = 0x0B, 
+  AuxEQLowGain = 0x12, 
+  AuxEQLowMidGain = 0x13, 
+  AuxEQHighMidGain = 0x14, 
+  AuxEQHighGain = 0x15
+};
+
+void sendGlobalNRPN(GlobalNRPN nrpn, byte value,
+                    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xB0; // channel always 0 here
+  buff[1] = 0x63;
+  buff[2] = 0x37;
+  buff[3] = 0x62;
+  buff[4] = nrpn;
+  buff[5] = 0x06;
+  buff[6] = value;
+  interface.sendSysEx(7, buff);
+}
+
+/**
+ * Global setting, always sent on channel 0.
+ */
+void sendReverbType(midi::DataByte type, 
+                    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xf0;
+  buff[1] = 0x41;
+  buff[2] = 0x00;
+  buff[3] = 0x42;
+  buff[4] = 0x12;
+  buff[5] = 0x40;
+  buff[6] = 0x01;
+  buff[7] = 0x30;
+  buff[8] = type;
+  buff[9] = 0x00;
+  buff[10] = 0xf7;
+  interface.sendSysEx(11, buff);
+}
+
+/**
+ * Global setting, always sent on channel 0.
+ */
+void sendEffectType(midi::DataByte type,
+                    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  buff[0] = 0xf0;
+  buff[1] = 0x41;
+  buff[2] = 0x00;
+  buff[3] = 0x42;
+  buff[4] = 0x12;
+  buff[5] = 0x40;
+  buff[6] = 0x01;
+  buff[7] = 0x38;
+  buff[8] = type;
+  buff[9] = 0x00;
+  buff[10] = 0xf7;
+  interface.sendSysEx(11, buff);
+}
+
+void sendReset(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  // General MIDI reset
+  buff[0] = 0xf0;
+  buff[1] = 0x7e;
+  buff[2] = 0x7f;
+  buff[3] = 0x09;
+  buff[4] = 0x01;
+  buff[5] = 0xf7;
+  interface.sendSysEx(6, buff);
+  sendReverbType(1, interface); // Room 2
+  sendEffectType(0, interface); // Chorus 1
+  // After power-on the EQs are not flat!
+  // Must be flattened explicitly.
+  sendGlobalNRPN(MainEQLowGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(MainEQLowMidGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(MainEQHighMidGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(MainEQHighGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(AuxEQLowGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(AuxEQLowMidGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(AuxEQHighMidGain, MIDI_CONTROLLER_MEAN, interface);
+  sendGlobalNRPN(AuxEQHighGain, MIDI_CONTROLLER_MEAN, interface);
+}
+
 
 /**
  * SYSEX F0H 7FH 7FH 04H 01H 00H II F7H 
@@ -196,12 +281,13 @@ void sendPreset(const Preset * preset,
   interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (preset->decay + 64), channel);
   interface.sendControlChange(midi::SoundController3, MIDI_CONTROLLER_MAX & (preset->release + 64), channel);
   interface.sendControlChange(midi::SoundController5, MIDI_CONTROLLER_MAX & (preset->cutoff + 64), channel);
-  // TODO send the rest
 };
 
 void sendRegistration(const Registration * registration, 
                  midi::Channel base_channel,
                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  sendReverbType(&registration->reverbType, interface);
+  sendEffectType(&registration->effectType, interface);
   sendPreset(&registration->left  , base_channel    , interface);                 
   sendPreset(&registration->right1, base_channel + 1, interface);                 
   sendPreset(&registration->right2, base_channel + 2, interface);
