@@ -186,8 +186,7 @@ void sendEffectType(midi::DataByte type,
   interface.sendSysEx(11, buff);
 }
 
-void sendReset(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
-  // General MIDI reset
+void sendGMReset(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
   buff[0] = 0xf0;
   buff[1] = 0x7e;
   buff[2] = 0x7f;
@@ -195,10 +194,12 @@ void sendReset(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface
   buff[4] = 0x01;
   buff[5] = 0xf7;
   interface.sendSysEx(6, buff);
-  sendReverbType(1, interface); // Room 2
-  sendEffectType(0, interface); // Chorus 1
-  // After power-on the EQs are not flat!
-  // Must be flattened explicitly.
+}
+
+/**
+ * After power-on the XXL EQs are not flat! Must be flattened explicitly.
+ */
+void flattenEQs(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
   sendGlobalNRPN(MainEQLowGain, MIDI_CONTROLLER_MEAN, interface);
   sendGlobalNRPN(MainEQLowMidGain, MIDI_CONTROLLER_MEAN, interface);
   sendGlobalNRPN(MainEQHighMidGain, MIDI_CONTROLLER_MEAN, interface);
@@ -208,7 +209,6 @@ void sendReset(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface
   sendGlobalNRPN(AuxEQHighMidGain, MIDI_CONTROLLER_MEAN, interface);
   sendGlobalNRPN(AuxEQHighGain, MIDI_CONTROLLER_MEAN, interface);
 }
-
 
 /**
  * SYSEX F0H 7FH 7FH 04H 01H 00H II F7H 
@@ -262,6 +262,7 @@ void sendCoarseTune(midi::DataByte value,
 void sendSound(const Sound * sound, 
                midi::Channel channel, 
                midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  flattenEQs(interface);
   interface.sendControlChange(midi::BankSelect, sound->bank, channel); // only MSB necessary for V3 Sound Grand Piano XXL
   interface.sendProgramChange(sound->prognum, channel);
   interface.sendControlChange(0x77, 0, channel); // reset all NRPNs
@@ -286,6 +287,8 @@ void sendPreset(const Preset * preset,
 void sendRegistration(const Registration * registration, 
                  midi::Channel base_channel,
                  midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> & interface) {
+  sendGMReset(interface);
+  flattenEQs(interface);
   sendReverbType(&registration->reverbType, interface);
   sendEffectType(&registration->effectType, interface);
   sendPreset(&registration->left  , base_channel    , interface);                 

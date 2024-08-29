@@ -89,8 +89,11 @@ void setup() {
   initVelocities(global_sens_to_exponent(settings.sensitivity));
 
   midi1.begin(1/*dummy input channel*/);
-  sendReset(midi1);
-  
+  sendGMReset(midi1);
+  sendReverbType(1, midi1); // Room 2
+  sendEffectType(0, midi1); // Chorus 1
+  flattenEQs(midi1);
+
   // disable timers / avoid jitter
   //TIMSK0 = 0; leave timer 0 enabled so that we still have delay() and millis() but not tone()
   TIMSK1 = 0;

@@ -55,7 +55,16 @@ Dies ist das mit Abstand wartungsfreundlichste Keyboard, das ich in meinem Musik
 
 ### MIDI-Kanäle einstellen
 
-Das Instrument sendet auf bis zu 3 aufeinanderfolgenden MIDI Kanälen, die über den Codierschalter einzustellen sind. Der Codierschalter wird nur beim Hochfahren ausgelesen. Für den Wechsel der MIDI Kanäle muss das Instrument also aus- und wieder eingeschaltet werden.
+Das Instrument sendet auf bis zu 3 aufeinanderfolgenden MIDI Kanälen, die über den Codierschalter einzustellen sind. Der Codierschalter wird nur beim Hochfahren ausgelesen
+in der Zeit, in der die Hintergrundbeleuchtung des Zeigerinstruments an ist. Für den Wechsel der MIDI Kanäle muss das Instrument also aus- und wieder eingeschaltet werden.
+
+Circa 5 Sekunden nach dem Einschalten werden außerdem
+
+* ein General MIDI Reset gesendet (SYSEX)
+* V3 Reverb Type auf Room 2 und Effect Type auf Chorus 1 gestellt (SYSEX)
+* V3 Main und AUX Equalizer flach[^1] gestellt (MIDI NRPNs)
+
+[^1]: Nach dem Einschalten sind die XXL EQs *nicht* flach eingestellt!
 
 #### Ohne Split
 
@@ -123,7 +132,14 @@ Die Namen der Sounds wurden denen aus dem V3 Handbuch entlehnt, z.B. _GP Hamburg
 
 #### Registrierungen
 
-Eine Registrierung[^1] besteht aus 3 Presets, ein Preset besteht derzeit aus
+Eine Registrierung besteht aus globalen Einstellungen und 3 Presets.
+
+Als globale Einstellungen werden unterstützt
+
+- Reverb Type
+- Effect Type
+
+Ein Preset besteht derzeit aus den kanalspezifischen Einstellungen
 
 - Bank Select + Program Change
 - Channel Volume
@@ -134,8 +150,6 @@ Eine Registrierung[^1] besteht aus 3 Presets, ein Preset besteht derzeit aus
 - Decay
 - Release
 - Cutoff Frequency
-
-[^1]: Anders als im Nachbarprojekt _Keyboard Controller_ bietet eine Registrierung derzeit noch nicht die Möglichkeit, andere Hall- oder Effekttypen einzustellen.
 
 Nach kurzem Drücken des grünen Tasters lässt sich eine Registrierung auswählen. Die orangene LED blinkt, bis eine Taste gedrückt wird. Eine gedrückte Taste ab der Tastaturmitte wählt die Registrierung aus. Die Registrierungen sind im [Quellcode](V3GrandPianoXXL.h) festzulegen. Aufkleber helfen beim Finden der zu drückenden Taste. Die Registrierungen wurden nach den Musiktiteln benannt, wo sie erstmalig zum Einsatz kamen, z.B. _Ain't No Sunshine_.
 
