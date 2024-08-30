@@ -68,7 +68,7 @@ struct Preset {
   const Sound & sound;
   midi::DataByte volume; // difference from 100
   midi::DataByte coarsetune; // difference from 0 [semitones]
-  midi::DataByte reverb; // difference from 64
+  midi::DataByte reverb; // absolute
   midi::DataByte chorus; // abs. value
   midi::DataByte attack; // difference from 64
   midi::DataByte decay;  // difference from 64
@@ -88,24 +88,24 @@ struct Registration {
 };
 
 const struct Registration  
-  AintNoSunshine = { 1,0, {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {StringsPWMA}, {MK1Tremolo,-10} },
-  AllCriedOut = { 1,0, {SynBass,0,0,-50,0,0,0,10/*release*/}, {Ice}, {FairlySpace,-10} },
-  Bedingungslos = { 1,0, {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {VPhrase}, {GPViennaLayeredStrings,-10} },
-  CatchTheRainbow = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {ClassicChoirAahFilter}, {GPHamburgLayeredPad,-10} },
-  DontPayTheFerryman = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {Brazza}, {GPHamburgLayeredPad,-10} },
-  DontYouNeed = { 1,0, {EBassFretless,15,0,-30,0,0,0,18/*release*/}, {Brightness}, {GuitarSteelSoft,-41} },
-  IchWillKeineSchokolade = { 1,0, {UprJazzBassVel96,15,0,-50,0,0,0,10/*release*/}, {USTrumpetSection}, {Organ800000568fast,-55} }, 
-  LetItRain = { 1,0, {EBassUS2,15,0,-50,0,0,0,10/*release*/}, {HammondFull}, {MK1DynoTremolo,-10} },
-  MeAndBobbyMcGee = { 1,0, {EBassUS1,15,0,-50,0,0,0,10/*release*/}, {Organ776555678fast}, {Organ807800000slow,-41} }, 
-  NieGenug = { 1,0, {EBassUS1,15,0,-50}, {EGuitarDistortion,0,-12/*transpose*/,41,74,0,0,8/*release*/}, {EGuitarClean,-41,0,0,60/*chorus*/,0,0,17,-10/*cutoff*/} }, 
-  RideLikeTheWind = { 1,0, {MOBassENV,0,0,-50,0,0,0,4/*release*/}, {M12Brass}, {GPHamburgDream, -10} }, 
-  RollingInTheDeep = { 1,0, {EBassPickDark,15,0,-50,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/}, {GPHamburgRock, -10} }, 
-  SummerDreaming = { 1,0, {EBassFretless,15,0,-50,0,0,10/*release*/}, {Organ008530000fast}, {A200,-10,0,0,16/*chorus*/} }, 
-  ThatOleDevilCalledLove = { 1,0, {UprightJazzBass,15,0,-50}, {USTrumpTrombSection}, {GrandPianoHamburg,-10} },
-  ThisIsTheLife = { 1,0, {EBassFretless,15,0,-50,0,0,18/*decay*/}, {Strings2Forte}, {GuitarSteel,-41,0,1,14/*chorus*/,0,0,6/*release*/} },
-  ThisMasquerade = { 1,0, {UprightJazzBass,15,0,-50,0,0,0,10/*release*/}, {Strings3}, {GrandPianoHamburg,-10} },
-  UnderneathYourClothes = { 1,0, {EBassFretless,15,0,-50,0,0,18/*release*/}, {DigitalPad,0,12,0,0,0,8/*release*/}, {StringsM12D,-41} },
-  AintNobody = { 1,0, {SynBass,7,0,-50,0,0,18/*release*/}, {OBLeadBPF24,27,0,14}, {MK1DynoLayeredFM,-32} };
+  AintNoSunshine = { 1,2, {UprightJazzBass,15,0,2,0,0,0,10/*release*/}, {StringsPWMA,0,0,15}, {MK1Tremolo,-10,0,10,33} },
+  AllCriedOut = { 1,0, {SynBass,0,0,4,0,0,0,10/*release*/}, {Ice,0,0,15}, {FairlySpace,-10,0,15} },
+  Bedingungslos = { 1,0, {EBassPickDark,15,0,2,0,0,0,10/*release*/}, {VPhrase,0,0,15}, {GPViennaLayeredStrings,-10,0,15} },
+  CatchTheRainbow = { 1,0, {EBassUS2,15,0,2,0,0,0,10/*release*/}, {ClassicChoirAahFilter,0,0,15}, {GPHamburgLayeredPad,-10,0,15} },
+  DontPayTheFerryman = { 1,0, {EBassUS2,15,0,2,0,0,0,10/*release*/}, {Brazza,0,0,15}, {GPHamburgLayeredPad,-10,0,15} },
+  DontYouNeed = { 1,0, {EBassFretless,15,0,8,0,0,0,18/*release*/}, {Brightness,0,0,15}, {GuitarSteelSoft,-41,0,15} },
+  IchWillKeineSchokolade = { 1,0, {UprJazzBassVel96,15,0,2,0,0,0,10/*release*/}, {USTrumpetSection,0,0,15}, {Organ800000568fast,-55,0,15} }, 
+  LetItRain = { 1,2, {EBassUS2,15,0,2,0,0,0,10/*release*/}, {HammondFull,0,0,15}, {MK1DynoTremolo,-10,0,10,33} },
+  MeAndBobbyMcGee = { 1,0, {EBassUS1,15,0,2,0,0,0,10/*release*/}, {Organ776555678fast,0,0,15}, {Organ807800000slow,-41,0,15} }, 
+  NieGenug = { 1,0, {EBassUS1,15,0,2}, {EGuitarDistortion,0,-12/*transpose*/,25,74,0,0,8/*release*/}, {EGuitarClean,-41,0,15,120/*chorus*/,0,0,17,-10/*cutoff*/} }, 
+  RideLikeTheWind = { 1,0, {MOBassENV,0,0,2,0,0,0,4/*release*/}, {M12Brass, 0,0,15}, {GPHamburgDream, -10,0,15} }, 
+  RollingInTheDeep = { 1,0, {EBassPickDark,15,0,2,0,0,0,10/*release*/}, {Strings3,0,-12/*transpose*/,15}, {GPHamburgRock, -10,0,15} }, 
+  SummerDreaming = { 1,0, {EBassFretless,15,0,2,0,0,10/*release*/}, {Organ008530000fast,0,0,15}, {A200,-10,0,15,16/*chorus*/} }, 
+  ThatOleDevilCalledLove = { 1,0, {UprightJazzBass,15,0,2}, {USTrumpTrombSection,0,0,15}, {GrandPianoHamburg,-10,0,15} },
+  ThisIsTheLife = { 1,2, {EBassFretless,15,0,2,0,0,18/*decay*/}, {Strings2Forte,0,0,15}, {GuitarSteel,-41,0,20,87/*chorus*/,0,0,8/*release*/} },
+  ThisMasquerade = { 1,0, {UprightJazzBass,15,0,2,0,0,0,10/*release*/}, {Strings3,0,0,15}, {GrandPianoHamburg,-10,0,15} },
+  UnderneathYourClothes = { 1,0, {EBassFretless,15,0,2,0,0,18/*release*/}, {DigitalPad,0,12,15,0,0,8/*release*/}, {StringsM12D,-41,0,15} },
+  AintNobody = { 5,1, {SynBass,7,0,2,0,0,18/*release*/}, {OBLeadBPF24,27,0,29}, {MK1DynoLayeredFM,-32,0,15,20} };
 
 const Registration * registrations[] = {
   & AintNoSunshine, & AllCriedOut,
@@ -276,7 +276,7 @@ void sendPreset(const Preset * preset,
   interface.sendControlChange(midi::ChannelVolume, MIDI_CONTROLLER_MAX & (preset->volume + 100), channel);
   interface.sendControlChange(midi::ExpressionController, MIDI_CONTROLLER_MAX, channel); // reset expression value
   sendCoarseTune(MIDI_CONTROLLER_MAX & (preset->coarsetune + 64), channel, interface);
-  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & (preset->reverb + 64), channel);
+  interface.sendControlChange(midi::Effects1, MIDI_CONTROLLER_MAX & preset->reverb, channel);
   interface.sendControlChange(midi::Effects3, MIDI_CONTROLLER_MAX & preset->chorus, channel);
   interface.sendControlChange(midi::SoundController4, MIDI_CONTROLLER_MAX & (preset->attack + 64), channel);
   interface.sendControlChange(midi::SoundController6, MIDI_CONTROLLER_MAX & (preset->decay + 64), channel);

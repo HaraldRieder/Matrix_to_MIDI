@@ -91,6 +91,10 @@ void setup() {
   midi1.begin(1/*dummy input channel*/);
   sendGMReset(midi1);
   sendReverbType(1, midi1); // Room 2
+  for (int i = 0; i < 3; i++) {
+    midi1.sendControlChange(midi::Effects1, 15, channel+i); // Room 2 -> lower reverb send level
+
+  }
   sendEffectType(0, midi1); // Chorus 1
   flattenEQs(midi1);
 
