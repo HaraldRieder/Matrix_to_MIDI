@@ -1,4 +1,4 @@
-static midi::DataByte buff[10];
+static midi::DataByte buff[20];
 
 struct Sound {
   midi::DataByte bank;
