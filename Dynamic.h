@@ -3,15 +3,13 @@ Fast key pressure:      3 ms =  23.4375 * 128 us
 Playing pianissimo: ~ 100 ms = 781.25   * 128 us
 */
 
-//#define QUADRATIC
-
 //const int t_127 = 30;   // * 128 us =   3.84 ms  
 //const int t_127 = 25;   // * 128 us =   3.20 ms  
 const int t_127 = 23;   // * 128 us =   2.94 ms  
 const int t_max = 1000; // * 128 us = 128.00 ms, from t_max on all velocities are minimal and constant  
 
 byte velocities[t_max + 1];
-float velocity_min = 1.0;
+float velocity_min = 7.0; // e.g. Roland Juno-D sends min. velocity of 7
 
 /*
 Calc. MIDI velocity proportional to velocity of pressed key:
