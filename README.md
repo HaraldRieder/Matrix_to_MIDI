@@ -164,6 +164,27 @@ Nach dem Einschalten wird nach einigen Sekunden der _Normalzustand_ `playing` er
 `playing` ist identisch mit dem bereits erwähnten Normalzustand. Um das obige Diagramm nicht zu überfrachten, wurde dieses weitere Diagramm erstellt.
 <p align="center"><img src="statediagram2.png"/></p>
 
+## FATAR Tastatur, sehr hochwertig aber inklusive Zeitbombe
+
+Meine LMK3 Tastatur wurde wahrscheinlich im Jahr 1991 hergestellt und dank leicht zu reinigender, versilberter Spiralschalter funktioniert sie 2024 noch tadellos.
+Allerdings hat die Tastatur einen Design-Fehler, der mit ziemlichem Aufwand behoben werden muss.
+Für Dämpfung sorgen Filze und Gummis. Die Gummis haben eine zusätzliche Funktion: sie führen die Tasten seitlich. Und das ist ein Problem.
+Gummiabrieb sammelt sich schon nach Monaten auf den metallenen Innenseiten der Tasten, und danach reibt Gummi auf Gummi.
+Wird die Taste genau senkrecht nach unten gedrückt, stört es nicht. Mit seitlicher Kraft nach rechts oder links widerborstet sie aber erheblich.
+So kann nicht ernsthaft Klavier gespielt werden!
+
+Dagegen habe ich jahrelang mit nähgarnumwickelten Gummis gearbeitet. Bei 88 Gummis ist das ein Riesenaufwand.
+Und nach Jahren sind manche Garne abgerieben und es bremst wieder bei seitlichem Niederdrücken.
+
+Bei neu aufgetauchten Widerborsten mussten nun die seitlichen Gummiführungen ganz weichen. Ich habe sie weggeschnitten, wodurch von jedem Gummi nur noch Ober- und Unterteil übrig bleiben.
+Diese werden nicht mehr von vorne auf die vorgesehenen Stahlhalterungen geschoben, was mangels Loch nicht mehr geht, sondern aufgeklebt.
+Die seitliche Führungsarbeit wird von 0,9 mm Garnierungsfilzen (von Meyne) übernommen. Bisher funktioniert das einwandfrei.
+<p align="center"><img src="Garnierung_0,9mm_FATAR.png"/></p>
+Auf dem Bild sieht man links 3 zerschnittene Gummis mit seitlichen, roten Filzführungen, daneben noch ein garnumwickelter Gummi.
+
+
+
+
 
 
 
